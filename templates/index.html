@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Festival Lineup Extractor</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png" />
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
     <style>
       * {
         box-sizing: border-box;
@@ -24,11 +28,16 @@
         text-align: center;
         margin-bottom: 32px;
       }
+      .page-header .logo {
+        width: 180px;
+        height: auto;
+        margin-bottom: 20px;
+      }
       .page-header h1 {
         font-size: 42px;
         font-weight: 800;
         color: white;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         letter-spacing: -0.5px;
       }
       .page-header .subtitle {
@@ -385,16 +394,33 @@
         display: none;
       }
       .footer {
-        margin-top: 16px;
+        margin-top: 40px;
+        padding: 24px 0;
         text-align: center;
         font-size: 13px;
-        color: #ffffff;
+        color: rgba(255, 255, 255, 0.7);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        width: 100%;
       }
-      .footer a {
-        color: #ffffff;
+      .footer-links {
+        margin-bottom: 12px;
+      }
+      .footer-links a {
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        margin: 0 12px;
+      }
+      .footer-links a:hover {
+        text-decoration: underline;
+      }
+      .footer-copyright {
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .footer-copyright a {
+        color: rgba(255, 255, 255, 0.7);
         text-decoration: none;
       }
-      .footer a:hover {
+      .footer-copyright a:hover {
         text-decoration: underline;
       }
       .wrapper {
@@ -564,6 +590,7 @@
   <body>
     <div class="wrapper">
       <div class="page-header">
+        <img src="/static/knokr.svg" alt="Knokr" class="logo" />
         <h1>Festival Lineup Extractor</h1>
         <p class="subtitle">
           Upload a lineup poster to extract artist names to CSV
@@ -725,10 +752,13 @@
       </div>
 
       <div class="footer">
-        Created by
-        <a href="https://github.com/jayfallon" target="_blank" rel="noopener"
-          >Jay Fallon</a
-        >
+        <div class="footer-links">
+          <a href="/terms">Terms of Service</a>
+          <a href="/privacy">Privacy & Data</a>
+        </div>
+        <div class="footer-copyright">
+          &copy; {{ current_year }} <a href="https://knokr.com" target="_blank" rel="noopener">Knokr</a>. All rights reserved.
+        </div>
       </div>
     </div>
 

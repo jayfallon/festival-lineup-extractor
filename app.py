@@ -15,7 +15,7 @@ cuid = cuid_wrapper()
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='public', static_url_path='/static')
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max file size
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -152,7 +152,17 @@ def generate_csv(festival_name: str, year: str, artists: list[str]) -> str:
 @app.route('/', methods=['GET'])
 def index():
     cloudfront_url = os.environ.get('NEXT_PUBLIC_CLOUDFRONT_URL', '')
-    return render_template('index.html', cloudfront_url=cloudfront_url)
+    return render_template('index.html', cloudfront_url=cloudfront_url, current_year=datetime.now().year)
+
+
+@app.route('/terms', methods=['GET'])
+def terms():
+    return render_template('terms.html', current_year=datetime.now().year)
+
+
+@app.route('/privacy', methods=['GET'])
+def privacy():
+    return render_template('privacy.html', current_year=datetime.now().year)
 
 
 @app.route('/uploads', methods=['GET'])
@@ -256,4 +266,5 @@ def extract():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
+    debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug, host='0.0.0.0', port=port)

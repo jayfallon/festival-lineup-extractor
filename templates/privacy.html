@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy & Data - Festival Lineup Extractor</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: linear-gradient(to bottom, #cc1e6c 0%, #21021c 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        padding: 40px 20px;
+      }
+      .container {
+        max-width: 800px;
+        width: 100%;
+      }
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        margin-bottom: 24px;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        color: white;
+      }
+      .card {
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+      }
+      h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+        color: #1f2937;
+      }
+      .last-updated {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 32px;
+      }
+      h2 {
+        font-size: 18px;
+        margin-top: 28px;
+        margin-bottom: 12px;
+        color: #1f2937;
+      }
+      p, li {
+        font-size: 15px;
+        line-height: 1.7;
+        color: #374151;
+        margin-bottom: 12px;
+      }
+      ul {
+        margin-left: 24px;
+        margin-bottom: 16px;
+      }
+      .highlight-box {
+        background: #f3f4f6;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .highlight-box h3 {
+        font-size: 16px;
+        color: #1f2937;
+        margin-bottom: 8px;
+      }
+      .footer {
+        margin-top: 40px;
+        text-align: center;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .footer a {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+      }
+      .footer a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="/" class="back-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to App
+      </a>
+
+      <div class="card">
+        <h1>Privacy & Data Policy</h1>
+        <p class="last-updated">Last updated: December 2024</p>
+
+        <div class="highlight-box">
+          <h3>Summary</h3>
+          <p style="margin-bottom: 0;">We process your uploaded images to extract artist names. Images and results are stored temporarily. Artist names not found in our database are added as pending entries for review. We do not sell your data.</p>
+        </div>
+
+        <h2>What Data We Collect</h2>
+        <p>When you use the Festival Lineup Extractor, we collect and process:</p>
+        <ul>
+          <li><strong>Uploaded Images:</strong> Festival lineup poster images you submit for processing</li>
+          <li><strong>Extracted Data:</strong> Artist names identified from your images</li>
+          <li><strong>Generated Files:</strong> CSV files created from the extraction</li>
+          <li><strong>Metadata:</strong> Festival name and year you provide</li>
+        </ul>
+
+        <h2>How We Use Your Data</h2>
+        <ul>
+          <li><strong>Image Processing:</strong> Your images are sent to Anthropic's Claude AI for analysis to extract artist names</li>
+          <li><strong>Database Matching:</strong> Extracted names are checked against our artist database</li>
+          <li><strong>New Artist Discovery:</strong> Artists not found in our database are added to a pending review queue to help expand our artist catalog</li>
+          <li><strong>File Storage:</strong> Uploaded images and generated CSVs are stored to provide download functionality</li>
+        </ul>
+
+        <h2>Data Storage & Retention</h2>
+        <ul>
+          <li>Uploaded images and CSV files are stored on our servers</li>
+          <li>Files may be retained for service improvement and debugging purposes</li>
+          <li>Pending artist entries are reviewed and may be added to our main database</li>
+        </ul>
+
+        <h2>Third-Party Services</h2>
+        <p>We use the following third-party services to provide this tool:</p>
+        <ul>
+          <li><strong>Anthropic (Claude AI):</strong> For image analysis and artist name extraction</li>
+          <li><strong>Railway:</strong> For application hosting and database services</li>
+          <li><strong>AWS CloudFront:</strong> For serving artist images</li>
+        </ul>
+
+        <h2>Your Rights</h2>
+        <p>You have the right to:</p>
+        <ul>
+          <li>Request information about data we hold about you</li>
+          <li>Request deletion of your uploaded images</li>
+          <li>Opt out of having extracted artists added to our pending queue</li>
+        </ul>
+
+        <h2>Data Security</h2>
+        <p>We implement appropriate security measures to protect your data, including encrypted connections (HTTPS) and secure database access controls.</p>
+
+        <h2>Contact Us</h2>
+        <p>For privacy-related questions or data requests, contact us at privacy@knokr.com.</p>
+      </div>
+
+      <div class="footer">
+        &copy; {{ current_year }} <a href="https://knokr.com" target="_blank" rel="noopener">Knokr</a>. All rights reserved.
+      </div>
+    </div>
+  </body>
+</html>
