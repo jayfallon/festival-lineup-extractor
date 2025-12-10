@@ -2,6 +2,7 @@ import os
 import csv
 import io
 import base64
+from datetime import datetime
 from flask import Flask, request, render_template, Response
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -10,9 +11,13 @@ from werkzeug.utils import secure_filename
 load_dotenv()
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max file size
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+UPLOADS_DIR = os.environ.get('UPLOADS_DIR', os.path.join(os.path.dirname(__file__), 'uploads'))
+
+# Ensure uploads directory exists
+os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 client = Anthropic()
 
@@ -123,6 +128,23 @@ def extract():
 
         # Generate CSV
         csv_content = generate_csv(festival_name, year, artists)
+
+        # Save uploaded image and CSV to uploads directory
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        safe_festival = secure_filename(festival_name)
+        base_filename = f"{safe_festival}_{year}_{timestamp}"
+
+        # Save image
+        image_filename = f"{base_filename}.{extension}"
+        image_path = os.path.join(UPLOADS_DIR, image_filename)
+        with open(image_path, 'wb') as f:
+            f.write(image_data)
+
+        # Save CSV
+        csv_filename = f"{base_filename}.csv"
+        csv_path = os.path.join(UPLOADS_DIR, csv_filename)
+        with open(csv_path, 'w', newline='') as f:
+            f.write(csv_content)
 
         # Return as downloadable CSV
         filename = f"{festival_name.lower().replace(' ', '_')}_{year}_lineup.csv"
