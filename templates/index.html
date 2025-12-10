@@ -346,8 +346,7 @@
         background: #4a0440;
       }
       .btn-reset {
-        margin-top: 10px;
-        padding: 10px 16px;
+        padding: 10px 0;
         background: #f3f4f6;
         color: #374151;
         border: 1px solid #e5e7eb;
@@ -408,12 +407,10 @@
       }
       .main-layout {
         display: flex;
+        flex-direction: column;
+        align-items: center;
         gap: 32px;
         width: 100%;
-        justify-content: center;
-      }
-      .main-layout.expanded {
-        justify-content: flex-start;
       }
       .form-section {
         width: 400px;
@@ -435,8 +432,7 @@
         border: 1px solid #e5e7eb;
       }
       .results-column {
-        flex: 1;
-        min-width: 0;
+        width: 100%;
         display: none;
         opacity: 0;
         transition: opacity 0.3s ease;
@@ -497,62 +493,52 @@
         transform: none;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
+      .results-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
       .results-column-header {
         color: white;
         font-size: 18px;
         font-weight: 600;
-        margin-bottom: 16px;
       }
-      .results-stats {
+      .results-actions {
         display: flex;
-        gap: 16px;
-        margin-bottom: 20px;
+        align-items: stretch;
+        gap: 10px;
       }
-      .results-stats-item {
-        background: rgba(255, 255, 255, 0.15);
-        padding: 12px 20px;
-        border-radius: 8px;
-        color: white;
-      }
-      .results-stats-number {
-        font-size: 24px;
-        font-weight: 700;
-      }
-      .results-stats-label {
-        font-size: 12px;
-        opacity: 0.8;
-      }
-      .download-bar {
-        margin-top: 20px;
-        padding: 16px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-      }
-      .download-bar a {
+      .results-actions a,
+      .results-actions button {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
-        padding: 10px 16px;
+        padding: 0 16px;
+        height: 36px;
+        font-size: 14px;
+        font-weight: 500;
+        border: none;
+        border-radius: 6px;
+        box-sizing: border-box;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .btn-download {
         background: white;
         color: #610553;
-        text-decoration: none;
-        border-radius: 6px;
-        font-weight: 500;
       }
-      .download-bar a:hover {
+      .btn-download:hover {
         background: #f3f4f6;
       }
-      .download-bar .btn-reset {
-        background: transparent;
+      .results-actions .btn-reset {
+        background: #000000;
         color: white;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        width: auto;
       }
-      .download-bar .btn-reset:hover {
-        background: rgba(255, 255, 255, 0.1);
+      .results-actions .btn-reset:hover {
+        background: #000000;
       }
       @media (max-width: 1024px) {
         .artist-grid {
@@ -703,43 +689,35 @@
         </div>
 
         <div class="results-column" id="resultsColumn">
-          <div class="results-column-header" id="resultsHeader">Artists Extracted</div>
-
-          <div class="results-stats">
-            <div class="results-stats-item">
-              <div class="results-stats-number" id="existingCount">0</div>
-              <div class="results-stats-label">In Database</div>
+          <div class="results-header-row">
+            <div class="results-column-header" id="resultsHeader">
+              Artists Extracted
             </div>
-            <div class="results-stats-item">
-              <div class="results-stats-number" id="newCount">0</div>
-              <div class="results-stats-label">New Artists</div>
+            <div class="results-actions">
+              <a id="downloadLink" href="#" download class="btn-download">
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
+                </svg>
+                Download CSV
+              </a>
+              <button type="button" class="btn-reset" id="resetBtn">
+                Extract Another
+              </button>
             </div>
           </div>
 
           <div class="artist-grid" id="artistGrid"></div>
-
-          <div class="download-bar">
-            <a id="downloadLink" href="#" download>
-              <svg
-                width="16"
-                height="16"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                />
-              </svg>
-              Download CSV
-            </a>
-            <button type="button" class="btn btn-reset" id="resetBtn">
-              Extract Another
-            </button>
-          </div>
         </div>
       </div>
 
@@ -761,8 +739,6 @@
       const imageSection = document.getElementById("imageSection");
       const resultsColumn = document.getElementById("resultsColumn");
       const resultsHeader = document.getElementById("resultsHeader");
-      const existingCount = document.getElementById("existingCount");
-      const newCount = document.getElementById("newCount");
       const artistGrid = document.getElementById("artistGrid");
       const downloadLink = document.getElementById("downloadLink");
       const dropzone = document.getElementById("dropzone");
@@ -775,6 +751,18 @@
       const resetBtn = document.getElementById("resetBtn");
 
       const BASE_URL = "https://knokr-base-production.up.railway.app";
+      const CLOUDFRONT_URL = "{{ cloudfront_url }}";
+
+      function getArtistImageUrl(imageUrl) {
+        if (!imageUrl || imageUrl === "a-few-moments-later.png") {
+          return null;
+        }
+        if (imageUrl.startsWith("http")) {
+          return imageUrl;
+        }
+        const filename = imageUrl.split(".")[0];
+        return `${CLOUDFRONT_URL}/transformed/artists/images/${filename}.webp`;
+      }
 
       const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp"];
 
@@ -815,7 +803,6 @@
         fileInput.value = "";
         hideFileInfo();
         resultsColumn.classList.remove("visible");
-        mainLayout.classList.remove("expanded");
         formCard.classList.remove("has-image");
         errorDiv.style.display = "none";
       });
@@ -863,10 +850,6 @@
         // Update header
         resultsHeader.textContent = `${data.festival_name} ${data.year} - ${data.total_artists} Artists`;
 
-        // Update counts
-        existingCount.textContent = data.existing_artists.length;
-        newCount.textContent = data.new_artists.length;
-
         // Clear and render artist grid
         artistGrid.innerHTML = "";
 
@@ -878,21 +861,18 @@
           card.target = "_blank";
           card.rel = "noopener";
 
-          const img = document.createElement("img");
-          if (artist.imageUrl) {
-            img.src = `${BASE_URL}/_next/image?url=${encodeURIComponent(artist.imageUrl)}&w=750&q=75`;
+          const imageUrl = getArtistImageUrl(artist.imageUrl);
+          if (imageUrl) {
+            const img = document.createElement("img");
+            img.src = imageUrl;
+            img.alt = artist.name;
+            img.loading = "lazy";
+            card.appendChild(img);
           } else {
-            img.src = "";
-            img.style.display = "none";
             const placeholder = document.createElement("div");
             placeholder.className = "artist-card-placeholder";
             placeholder.textContent = artist.name.charAt(0).toUpperCase();
             card.appendChild(placeholder);
-          }
-          img.alt = artist.name;
-          img.loading = "lazy";
-          if (artist.imageUrl) {
-            card.appendChild(img);
           }
 
           const nameDiv = document.createElement("div");
@@ -927,8 +907,7 @@
         downloadLink.href = data.csv_download;
         downloadLink.download = data.csv_filename;
 
-        // Show results column and expand layout
-        mainLayout.classList.add("expanded");
+        // Show results column
         resultsColumn.classList.add("visible");
       }
 
