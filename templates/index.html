@@ -135,6 +135,18 @@
         color: #9ca3af;
         margin-top: 8px;
       }
+      .image-preview {
+        display: none;
+        margin-bottom: 20px;
+      }
+      .image-preview.visible {
+        display: block;
+      }
+      .image-preview img {
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+      }
       .file-info {
         display: none;
         align-items: center;
@@ -229,6 +241,45 @@
         margin-bottom: 20px;
         display: none;
         font-size: 14px;
+      }
+      .success {
+        display: none;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        text-align: center;
+      }
+      .success.visible {
+        display: block;
+      }
+      .success a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 10px;
+        padding: 10px 16px;
+        background: #16a34a;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 500;
+      }
+      .success a:hover {
+        background: #15803d;
+      }
+      .btn-reset {
+        margin-top: 10px;
+        padding: 10px 16px;
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+      }
+      .btn-reset:hover {
+        background: #e5e7eb;
       }
       .loading {
         display: none;
@@ -339,6 +390,10 @@
         </div>
         <input type="file" id="image" name="image" accept="image/*" required />
 
+        <div class="image-preview" id="imagePreview">
+          <img id="previewImg" src="" alt="Preview" />
+        </div>
+
         <div class="file-info" id="fileInfo">
           <div class="file-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -395,6 +450,17 @@
         <div class="spinner"></div>
         <span class="loading-text">Analyzing lineup image...</span>
       </div>
+
+      <div class="success" id="success">
+        <p>Artists extracted successfully!</p>
+        <a id="downloadLink" href="#" download>
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Download CSV
+        </a>
+        <button type="button" class="btn btn-reset" id="resetBtn">Extract Another</button>
+      </div>
     </div>
 
     <div class="footer">
@@ -410,12 +476,19 @@
       const submitBtn = document.getElementById("submitBtn");
       const loading = document.getElementById("loading");
       const errorDiv = document.getElementById("error");
+      const successDiv = document.getElementById("success");
+      const downloadLink = document.getElementById("downloadLink");
       const dropzone = document.getElementById("dropzone");
       const fileInput = document.getElementById("image");
       const fileInfo = document.getElementById("fileInfo");
       const fileName = document.getElementById("fileName");
       const fileSize = document.getElementById("fileSize");
       const fileRemove = document.getElementById("fileRemove");
+      const imagePreview = document.getElementById("imagePreview");
+      const previewImg = document.getElementById("previewImg");
+      const resetBtn = document.getElementById("resetBtn");
+
+      const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp"];
 
       // Drag and drop handlers
       dropzone.addEventListener("click", () => fileInput.click());
@@ -434,14 +507,13 @@
         dropzone.classList.remove("dragover");
         const files = e.dataTransfer.files;
         if (files.length) {
-          fileInput.files = files;
-          showFileInfo(files[0]);
+          handleFileSelect(files[0]);
         }
       });
 
       fileInput.addEventListener("change", () => {
         if (fileInput.files.length) {
-          showFileInfo(fileInput.files[0]);
+          handleFileSelect(fileInput.files[0]);
         }
       });
 
@@ -449,6 +521,30 @@
         fileInput.value = "";
         hideFileInfo();
       });
+
+      resetBtn.addEventListener("click", () => {
+        form.reset();
+        fileInput.value = "";
+        hideFileInfo();
+        successDiv.classList.remove("visible");
+        errorDiv.style.display = "none";
+      });
+
+      function handleFileSelect(file) {
+        // Check for AVIF or other unsupported formats
+        const ext = file.name.split(".").pop().toLowerCase();
+        if (!ALLOWED_EXTENSIONS.includes(ext)) {
+          errorDiv.textContent = `Unsupported file format: .${ext}. Please use PNG, JPG, GIF, or WebP.`;
+          errorDiv.style.display = "block";
+          fileInput.value = "";
+          return;
+        }
+
+        errorDiv.style.display = "none";
+        successDiv.classList.remove("visible");
+        showFileInfo(file);
+        showImagePreview(file);
+      }
 
       function showFileInfo(file) {
         fileName.textContent = file.name;
@@ -460,6 +556,17 @@
       function hideFileInfo() {
         fileInfo.classList.remove("visible");
         dropzone.classList.remove("has-file", "hidden");
+        imagePreview.classList.remove("visible");
+        previewImg.src = "";
+      }
+
+      function showImagePreview(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previewImg.src = e.target.result;
+          imagePreview.classList.add("visible");
+        };
+        reader.readAsDataURL(file);
       }
 
       function formatFileSize(bytes) {
@@ -471,6 +578,7 @@
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         errorDiv.style.display = "none";
+        successDiv.classList.remove("visible");
         submitBtn.disabled = true;
         loading.style.display = "flex";
 
@@ -489,16 +597,14 @@
 
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download =
+          const csvFilename =
             response.headers
               .get("Content-Disposition")
               ?.split("filename=")[1] || "lineup.csv";
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          a.remove();
+
+          downloadLink.href = url;
+          downloadLink.download = csvFilename;
+          successDiv.classList.add("visible");
         } catch (err) {
           errorDiv.textContent = err.message;
           errorDiv.style.display = "block";
