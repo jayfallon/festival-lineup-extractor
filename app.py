@@ -3,10 +3,12 @@ import csv
 import io
 import base64
 from datetime import datetime
-from flask import Flask, request, render_template, Response, send_from_directory
+from flask import Flask, request, render_template, Response, send_from_directory, jsonify
 from anthropic import Anthropic
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
+import pg8000
+from urllib.parse import urlparse
 
 load_dotenv()
 
@@ -20,6 +22,53 @@ UPLOADS_DIR = os.environ.get('UPLOADS_DIR', os.path.join(os.path.dirname(__file_
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 client = Anthropic()
+
+
+def get_db_connection():
+    """Get a connection to the PostgreSQL database."""
+    database_url = os.environ.get('DATABASE_URL')
+    if not database_url:
+        return None
+
+    # Parse the URL for pg8000
+    result = urlparse(database_url)
+    return pg8000.connect(
+        host=result.hostname,
+        port=result.port or 5432,
+        database=result.path[1:],
+        user=result.username,
+        password=result.password
+    )
+
+
+def check_existing_artists(artist_names: list[str]) -> dict:
+    """Check which artists exist in the database."""
+    conn = get_db_connection()
+    if not conn:
+        return {'existing': [], 'new': artist_names}
+
+    try:
+        cursor = conn.cursor()
+        # Use case-insensitive matching
+        placeholders = ','.join(['%s'] * len(artist_names))
+        query = f"""
+            SELECT name FROM "Artist"
+            WHERE LOWER(name) IN ({','.join(['LOWER(%s)'] * len(artist_names))})
+        """
+        cursor.execute(query, artist_names)
+        existing_names = {row[0].lower(): row[0] for row in cursor.fetchall()}
+
+        existing = []
+        new = []
+        for name in artist_names:
+            if name.lower() in existing_names:
+                existing.append(existing_names[name.lower()])
+            else:
+                new.append(name)
+
+        return {'existing': existing, 'new': new}
+    finally:
+        conn.close()
 
 
 def allowed_file(filename):
@@ -148,7 +197,10 @@ def extract():
         if not artists:
             return {'error': 'No artists found in the image'}, 400
 
-        # Generate CSV
+        # Check which artists exist in the database
+        artist_check = check_existing_artists(artists)
+
+        # Generate CSV with all artists
         csv_content = generate_csv(festival_name, year, artists)
 
         # Save uploaded image and CSV to uploads directory
@@ -168,14 +220,17 @@ def extract():
         with open(csv_path, 'w', newline='') as f:
             f.write(csv_content)
 
-        # Return as downloadable CSV
-        filename = f"{festival_name.lower().replace(' ', '_')}_{year}_lineup.csv"
-
-        return Response(
-            csv_content,
-            mimetype='text/csv',
-            headers={'Content-Disposition': f'attachment; filename={filename}'}
-        )
+        # Return JSON with artist breakdown and CSV download path
+        return jsonify({
+            'success': True,
+            'festival_name': festival_name,
+            'year': year,
+            'existing_artists': artist_check['existing'],
+            'new_artists': artist_check['new'],
+            'total_artists': len(artists),
+            'csv_filename': csv_filename,
+            'csv_download': f'/uploads/{csv_filename}'
+        })
 
     except Exception as e:
         return {'error': f'Failed to process image: {str(e)}'}, 500

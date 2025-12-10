@@ -14,32 +14,35 @@
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
           sans-serif;
         min-height: 100vh;
-        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+        background: linear-gradient(180deg, #cc1e6c 0%, #fcd1d3 100%);
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         padding: 20px;
+      }
+      .page-header {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+      .page-header h1 {
+        font-size: 42px;
+        font-weight: 800;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        letter-spacing: -0.5px;
+      }
+      .page-header .subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 16px;
+        margin-top: 8px;
       }
       .card {
         background: white;
         border-radius: 16px;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
         width: 100%;
         max-width: 480px;
         padding: 32px;
-      }
-      .header {
-        margin-bottom: 24px;
-      }
-      h1 {
-        font-size: 22px;
-        font-weight: 600;
-        color: #1a1a2e;
-        margin-bottom: 4px;
-      }
-      .subtitle {
-        color: #6b7280;
-        font-size: 14px;
       }
       .form-row {
         display: flex;
@@ -222,14 +225,14 @@
         gap: 8px;
       }
       .btn-primary {
-        background: #2563eb;
+        background: #610553;
         color: white;
       }
       .btn-primary:hover {
-        background: #1d4ed8;
+        background: #4a0440;
       }
       .btn-primary:disabled {
-        background: #93c5fd;
+        background: #a87a9e;
         cursor: not-allowed;
       }
       .error {
@@ -242,34 +245,113 @@
         display: none;
         font-size: 14px;
       }
-      .success {
+      .results {
         display: none;
-        background: #f0fdf4;
-        border: 1px solid #bbf7d0;
-        color: #166534;
-        padding: 16px;
-        border-radius: 8px;
         margin-bottom: 20px;
-        font-size: 14px;
-        text-align: center;
       }
-      .success.visible {
+      .results.visible {
         display: block;
       }
-      .success a {
+      .results-header {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 16px;
+        text-align: center;
+      }
+      .results-summary {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .results-stat {
+        flex: 1;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+      }
+      .results-stat.existing {
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+      }
+      .results-stat.new {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+      }
+      .results-stat-number {
+        font-size: 24px;
+        font-weight: 700;
+      }
+      .results-stat.existing .results-stat-number {
+        color: #1f2937;
+      }
+      .results-stat.new .results-stat-number {
+        color: #1f2937;
+      }
+      .results-stat-label {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 2px;
+      }
+      .artist-list {
+        margin-bottom: 16px;
+      }
+      .artist-list-header {
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .artist-list-header .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .artist-list-header .dot.existing {
+        background: #6b7280;
+      }
+      .artist-list-header .dot.new {
+        background: #9ca3af;
+      }
+      .artist-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .artist-tag {
+        padding: 4px 10px;
+        border-radius: 16px;
+        font-size: 13px;
+      }
+      .artist-tag.existing {
+        background: #e5e7eb;
+        color: #1f2937;
+      }
+      .artist-tag.new {
+        background: #f3f4f6;
+        color: #1f2937;
+      }
+      .download-section {
+        text-align: center;
+        padding-top: 16px;
+        border-top: 1px solid #e5e7eb;
+      }
+      .download-section a {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        margin-top: 10px;
         padding: 10px 16px;
-        background: #16a34a;
+        background: #610553;
         color: white;
         text-decoration: none;
         border-radius: 6px;
         font-weight: 500;
       }
-      .success a:hover {
-        background: #15803d;
+      .download-section a:hover {
+        background: #4a0440;
       }
       .btn-reset {
         margin-top: 10px;
@@ -315,104 +397,131 @@
         margin-top: 16px;
         text-align: center;
         font-size: 13px;
-        color: #9ca3af;
+        color: #610553;
       }
       .footer a {
-        color: #6b7280;
+        color: #610553;
         text-decoration: none;
       }
       .footer a:hover {
-        color: #2563eb;
+        text-decoration: underline;
       }
       .wrapper {
         display: flex;
         flex-direction: column;
         align-items: center;
+        padding-top: 40px;
+        width: 100%;
+        max-width: 480px;
       }
     </style>
   </head>
   <body>
     <div class="wrapper">
-    <div class="card">
-      <div class="header">
+      <div class="page-header">
         <h1>Festival Lineup Extractor</h1>
         <p class="subtitle">
           Upload a lineup poster to extract artist names to CSV
         </p>
       </div>
 
-      <div class="error" id="error"></div>
+      <div class="card">
+        <div class="error" id="error"></div>
 
-      <form
-        id="uploadForm"
-        action="/extract"
-        method="POST"
-        enctype="multipart/form-data"
-      >
-        <div class="form-row">
-          <div class="form-group">
-            <label for="festival_name">Festival Name</label>
-            <input
-              type="text"
-              id="festival_name"
-              name="festival_name"
-              placeholder="Coachella"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="year">Year</label>
-            <input
-              type="text"
-              id="year"
-              name="year"
-              placeholder="2026"
-              required
-            />
-          </div>
-        </div>
-
-        <div class="dropzone" id="dropzone">
-          <div class="dropzone-icon">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+        <form
+          id="uploadForm"
+          action="/extract"
+          method="POST"
+          enctype="multipart/form-data"
+        >
+          <div class="form-row">
+            <div class="form-group">
+              <label for="festival_name">Festival Name</label>
+              <input
+                type="text"
+                id="festival_name"
+                name="festival_name"
+                placeholder="Coachella"
+                required
               />
-            </svg>
-          </div>
-          <p class="dropzone-text">
-            Drag and drop image here or <span>browse</span>
-          </p>
-          <p class="dropzone-hint">PNG, JPG, GIF, WebP up to 5MB</p>
-        </div>
-        <input type="file" id="image" name="image" accept="image/*" required />
-
-        <div class="image-preview" id="imagePreview">
-          <img id="previewImg" src="" alt="Preview" />
-        </div>
-
-        <div class="file-info" id="fileInfo">
-          <div class="file-icon">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            </div>
+            <div class="form-group">
+              <label for="year">Year</label>
+              <input
+                type="text"
+                id="year"
+                name="year"
+                placeholder="2026"
+                required
               />
-            </svg>
+            </div>
           </div>
-          <div class="file-details">
-            <div class="file-name" id="fileName"></div>
-            <div class="file-size" id="fileSize"></div>
+
+          <div class="dropzone" id="dropzone">
+            <div class="dropzone-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+            </div>
+            <p class="dropzone-text">
+              Drag and drop image here or <span>browse</span>
+            </p>
+            <p class="dropzone-hint">PNG, JPG, GIF, WebP up to 5MB</p>
           </div>
-          <button type="button" class="file-remove" id="fileRemove">
+          <input
+            type="file"
+            id="image"
+            name="image"
+            accept="image/*"
+            required
+          />
+
+          <div class="image-preview" id="imagePreview">
+            <img id="previewImg" src="" alt="Preview" />
+          </div>
+
+          <div class="file-info" id="fileInfo">
+            <div class="file-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <div class="file-details">
+              <div class="file-name" id="fileName"></div>
+              <div class="file-size" id="fileSize"></div>
+            </div>
+            <button type="button" class="file-remove" id="fileRemove">
+              <svg
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="submitBtn">
             <svg
-              width="16"
-              height="16"
+              width="18"
+              height="18"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -421,54 +530,79 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
               />
             </svg>
+            Extract & Download CSV
           </button>
+        </form>
+
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <span class="loading-text">Analyzing lineup image...</span>
         </div>
 
-        <button type="submit" class="btn btn-primary" id="submitBtn">
-          <svg
-            width="18"
-            height="18"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-          Extract & Download CSV
-        </button>
-      </form>
+        <div class="results" id="results">
+          <div class="results-header" id="resultsHeader">Artists Extracted</div>
 
-      <div class="loading" id="loading">
-        <div class="spinner"></div>
-        <span class="loading-text">Analyzing lineup image...</span>
+          <div class="results-summary">
+            <div class="results-stat existing">
+              <div class="results-stat-number" id="existingCount">0</div>
+              <div class="results-stat-label">In Database</div>
+            </div>
+            <div class="results-stat new">
+              <div class="results-stat-number" id="newCount">0</div>
+              <div class="results-stat-label">New Artists</div>
+            </div>
+          </div>
+
+          <div class="artist-list" id="existingArtistsList">
+            <div class="artist-list-header">
+              <span class="dot existing"></span>
+              In Database
+            </div>
+            <div class="artist-tags" id="existingArtistsTags"></div>
+          </div>
+
+          <div class="artist-list" id="newArtistsList">
+            <div class="artist-list-header">
+              <span class="dot new"></span>
+              New Artists
+            </div>
+            <div class="artist-tags" id="newArtistsTags"></div>
+          </div>
+
+          <div class="download-section">
+            <a id="downloadLink" href="#" download>
+              <svg
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              Download CSV
+            </a>
+            <button type="button" class="btn btn-reset" id="resetBtn">
+              Extract Another
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="success" id="success">
-        <p>Artists extracted successfully!</p>
-        <a id="downloadLink" href="#" download>
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-          </svg>
-          Download CSV
-        </a>
-        <button type="button" class="btn btn-reset" id="resetBtn">Extract Another</button>
+      <div class="footer">
+        Created by
+        <a href="https://github.com/jayfallon" target="_blank" rel="noopener"
+          >Jay Fallon</a
+        >
       </div>
-    </div>
-
-    <div class="footer">
-      Created by
-      <a href="https://github.com/jayfallon" target="_blank" rel="noopener"
-        >Jay Fallon</a
-      >
-    </div>
     </div>
 
     <script>
@@ -476,7 +610,18 @@
       const submitBtn = document.getElementById("submitBtn");
       const loading = document.getElementById("loading");
       const errorDiv = document.getElementById("error");
-      const successDiv = document.getElementById("success");
+      const resultsDiv = document.getElementById("results");
+      const resultsHeader = document.getElementById("resultsHeader");
+      const existingCount = document.getElementById("existingCount");
+      const newCount = document.getElementById("newCount");
+      const existingArtistsList = document.getElementById(
+        "existingArtistsList"
+      );
+      const existingArtistsTags = document.getElementById(
+        "existingArtistsTags"
+      );
+      const newArtistsList = document.getElementById("newArtistsList");
+      const newArtistsTags = document.getElementById("newArtistsTags");
       const downloadLink = document.getElementById("downloadLink");
       const dropzone = document.getElementById("dropzone");
       const fileInput = document.getElementById("image");
@@ -526,7 +671,7 @@
         form.reset();
         fileInput.value = "";
         hideFileInfo();
-        successDiv.classList.remove("visible");
+        resultsDiv.classList.remove("visible");
         errorDiv.style.display = "none";
       });
 
@@ -541,7 +686,7 @@
         }
 
         errorDiv.style.display = "none";
-        successDiv.classList.remove("visible");
+        resultsDiv.classList.remove("visible");
         showFileInfo(file);
         showImagePreview(file);
       }
@@ -569,6 +714,50 @@
         reader.readAsDataURL(file);
       }
 
+      function displayResults(data) {
+        // Update header
+        resultsHeader.textContent = `${data.festival_name} ${data.year} - ${data.total_artists} Artists`;
+
+        // Update counts
+        existingCount.textContent = data.existing_artists.length;
+        newCount.textContent = data.new_artists.length;
+
+        // Render existing artists
+        existingArtistsTags.innerHTML = "";
+        if (data.existing_artists.length > 0) {
+          existingArtistsList.style.display = "block";
+          data.existing_artists.forEach((artist) => {
+            const tag = document.createElement("span");
+            tag.className = "artist-tag existing";
+            tag.textContent = artist;
+            existingArtistsTags.appendChild(tag);
+          });
+        } else {
+          existingArtistsList.style.display = "none";
+        }
+
+        // Render new artists
+        newArtistsTags.innerHTML = "";
+        if (data.new_artists.length > 0) {
+          newArtistsList.style.display = "block";
+          data.new_artists.forEach((artist) => {
+            const tag = document.createElement("span");
+            tag.className = "artist-tag new";
+            tag.textContent = artist;
+            newArtistsTags.appendChild(tag);
+          });
+        } else {
+          newArtistsList.style.display = "none";
+        }
+
+        // Set download link
+        downloadLink.href = data.csv_download;
+        downloadLink.download = data.csv_filename;
+
+        // Show results
+        resultsDiv.classList.add("visible");
+      }
+
       function formatFileSize(bytes) {
         if (bytes < 1024) return bytes + " B";
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
@@ -578,7 +767,7 @@
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         errorDiv.style.display = "none";
-        successDiv.classList.remove("visible");
+        resultsDiv.classList.remove("visible");
         submitBtn.disabled = true;
         loading.style.display = "flex";
 
@@ -590,21 +779,13 @@
             body: formData,
           });
 
+          const data = await response.json();
+
           if (!response.ok) {
-            const data = await response.json();
             throw new Error(data.error || "Failed to process image");
           }
 
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const csvFilename =
-            response.headers
-              .get("Content-Disposition")
-              ?.split("filename=")[1] || "lineup.csv";
-
-          downloadLink.href = url;
-          downloadLink.download = csvFilename;
-          successDiv.classList.add("visible");
+          displayResults(data);
         } catch (err) {
           errorDiv.textContent = err.message;
           errorDiv.style.display = "block";
