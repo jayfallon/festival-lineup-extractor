@@ -136,7 +136,7 @@ def generate_csv(festival_name: str, year: str, artists: list[str]) -> str:
 
 @app.route('/', methods=['GET'])
 def index():
-    cloudfront_url = os.environ.get('CLOUDFRONT_URL', '')
+    cloudfront_url = os.environ.get('NEXT_PUBLIC_CLOUDFRONT_URL', '')
     return render_template('index.html', cloudfront_url=cloudfront_url)
 
 
