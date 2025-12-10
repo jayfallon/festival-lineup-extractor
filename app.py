@@ -42,27 +42,29 @@ def get_db_connection():
 
 
 def check_existing_artists(artist_names: list[str]) -> dict:
-    """Check which artists exist in the database."""
+    """Check which artists exist in the database and return their details."""
     conn = get_db_connection()
     if not conn:
         return {'existing': [], 'new': artist_names}
 
     try:
         cursor = conn.cursor()
-        # Use case-insensitive matching
-        placeholders = ','.join(['%s'] * len(artist_names))
+        # Use case-insensitive matching, return name, slug, and imageUrl
         query = f"""
-            SELECT name FROM "Artist"
+            SELECT name, slug, "imageUrl" FROM "Artist"
             WHERE LOWER(name) IN ({','.join(['LOWER(%s)'] * len(artist_names))})
         """
         cursor.execute(query, artist_names)
-        existing_names = {row[0].lower(): row[0] for row in cursor.fetchall()}
+        existing_map = {
+            row[0].lower(): {'name': row[0], 'slug': row[1], 'imageUrl': row[2]}
+            for row in cursor.fetchall()
+        }
 
         existing = []
         new = []
         for name in artist_names:
-            if name.lower() in existing_names:
-                existing.append(existing_names[name.lower()])
+            if name.lower() in existing_map:
+                existing.append(existing_map[name.lower()])
             else:
                 new.append(name)
 

@@ -40,9 +40,13 @@
         background: white;
         border-radius: 16px;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
-        width: 100%;
-        max-width: 480px;
         padding: 32px;
+        display: flex;
+        flex-direction: row;
+        gap: 0;
+      }
+      .card.has-image {
+        gap: 32px;
       }
       .form-row {
         display: flex;
@@ -137,18 +141,6 @@
         font-size: 12px;
         color: #9ca3af;
         margin-top: 8px;
-      }
-      .image-preview {
-        display: none;
-        margin-bottom: 20px;
-      }
-      .image-preview.visible {
-        display: block;
-      }
-      .image-preview img {
-        width: 100%;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
       }
       .file-info {
         display: none;
@@ -412,7 +404,171 @@
         align-items: center;
         padding-top: 40px;
         width: 100%;
-        max-width: 480px;
+        max-width: 1200px;
+      }
+      .main-layout {
+        display: flex;
+        gap: 32px;
+        width: 100%;
+        justify-content: center;
+      }
+      .main-layout.expanded {
+        justify-content: flex-start;
+      }
+      .form-section {
+        width: 400px;
+        flex-shrink: 0;
+      }
+      .image-section {
+        display: none;
+        width: 400px;
+        flex-shrink: 0;
+      }
+      .card.has-image .image-section {
+        display: block;
+      }
+      .image-section img {
+        width: 100%;
+        max-height: 500px;
+        object-fit: contain;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+      }
+      .results-column {
+        flex: 1;
+        min-width: 0;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .results-column.visible {
+        display: block;
+        opacity: 1;
+      }
+      .artist-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .artist-card {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: block;
+      }
+      .artist-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      .artist-card img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        display: block;
+      }
+      .artist-card-placeholder {
+        width: 100%;
+        aspect-ratio: 1;
+        background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #9ca3af;
+        font-size: 24px;
+      }
+      .artist-card-name {
+        padding: 10px 8px;
+        font-size: 13px;
+        font-weight: 500;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        background: white;
+      }
+      .artist-card-new {
+        opacity: 0.7;
+      }
+      .artist-card-new:hover {
+        transform: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .results-column-header {
+        color: white;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+      .results-stats {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+      .results-stats-item {
+        background: rgba(255, 255, 255, 0.15);
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+      }
+      .results-stats-number {
+        font-size: 24px;
+        font-weight: 700;
+      }
+      .results-stats-label {
+        font-size: 12px;
+        opacity: 0.8;
+      }
+      .download-bar {
+        margin-top: 20px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .download-bar a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 16px;
+        background: white;
+        color: #610553;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 500;
+      }
+      .download-bar a:hover {
+        background: #f3f4f6;
+      }
+      .download-bar .btn-reset {
+        background: transparent;
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      .download-bar .btn-reset:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      @media (max-width: 1024px) {
+        .artist-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      @media (max-width: 768px) {
+        .main-layout {
+          flex-direction: column;
+        }
+        .form-column {
+          width: 100%;
+        }
+        .artist-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
       }
     </style>
   </head>
@@ -425,154 +581,144 @@
         </p>
       </div>
 
-      <div class="card">
-        <div class="error" id="error"></div>
+      <div class="main-layout" id="mainLayout">
+        <div class="card" id="formCard">
+          <div class="form-section">
+            <div class="error" id="error"></div>
 
-        <form
-          id="uploadForm"
-          action="/extract"
-          method="POST"
-          enctype="multipart/form-data"
-        >
-          <div class="form-row">
-            <div class="form-group">
-              <label for="festival_name">Festival Name</label>
+            <form
+              id="uploadForm"
+              action="/extract"
+              method="POST"
+              enctype="multipart/form-data"
+            >
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="festival_name">Festival Name</label>
+                  <input
+                    type="text"
+                    id="festival_name"
+                    name="festival_name"
+                    placeholder="Coachella"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="year">Year</label>
+                  <input
+                    type="text"
+                    id="year"
+                    name="year"
+                    placeholder="2026"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="dropzone" id="dropzone">
+                <div class="dropzone-icon">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
+                  </svg>
+                </div>
+                <p class="dropzone-text">
+                  Drag and drop image here or <span>browse</span>
+                </p>
+                <p class="dropzone-hint">PNG, JPG, GIF, WebP up to 5MB</p>
+              </div>
               <input
-                type="text"
-                id="festival_name"
-                name="festival_name"
-                placeholder="Coachella"
+                type="file"
+                id="image"
+                name="image"
+                accept="image/*"
                 required
               />
-            </div>
-            <div class="form-group">
-              <label for="year">Year</label>
-              <input
-                type="text"
-                id="year"
-                name="year"
-                placeholder="2026"
-                required
-              />
+
+              <div class="file-info" id="fileInfo">
+                <div class="file-icon">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <div class="file-details">
+                  <div class="file-name" id="fileName"></div>
+                  <div class="file-size" id="fileSize"></div>
+                </div>
+                <button type="button" class="file-remove" id="fileRemove">
+                  <svg
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
+                </svg>
+                Extract Artists
+              </button>
+            </form>
+
+            <div class="loading" id="loading">
+              <div class="spinner"></div>
+              <span class="loading-text">Analyzing lineup image...</span>
             </div>
           </div>
 
-          <div class="dropzone" id="dropzone">
-            <div class="dropzone-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-            </div>
-            <p class="dropzone-text">
-              Drag and drop image here or <span>browse</span>
-            </p>
-            <p class="dropzone-hint">PNG, JPG, GIF, WebP up to 5MB</p>
-          </div>
-          <input
-            type="file"
-            id="image"
-            name="image"
-            accept="image/*"
-            required
-          />
-
-          <div class="image-preview" id="imagePreview">
+          <div class="image-section" id="imageSection">
             <img id="previewImg" src="" alt="Preview" />
           </div>
-
-          <div class="file-info" id="fileInfo">
-            <div class="file-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <div class="file-details">
-              <div class="file-name" id="fileName"></div>
-              <div class="file-size" id="fileSize"></div>
-            </div>
-            <button type="button" class="file-remove" id="fileRemove">
-              <svg
-                width="16"
-                height="16"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <button type="submit" class="btn btn-primary" id="submitBtn">
-            <svg
-              width="18"
-              height="18"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-              />
-            </svg>
-            Extract & Download CSV
-          </button>
-        </form>
-
-        <div class="loading" id="loading">
-          <div class="spinner"></div>
-          <span class="loading-text">Analyzing lineup image...</span>
         </div>
 
-        <div class="results" id="results">
-          <div class="results-header" id="resultsHeader">Artists Extracted</div>
+        <div class="results-column" id="resultsColumn">
+          <div class="results-column-header" id="resultsHeader">Artists Extracted</div>
 
-          <div class="results-summary">
-            <div class="results-stat existing">
-              <div class="results-stat-number" id="existingCount">0</div>
-              <div class="results-stat-label">In Database</div>
+          <div class="results-stats">
+            <div class="results-stats-item">
+              <div class="results-stats-number" id="existingCount">0</div>
+              <div class="results-stats-label">In Database</div>
             </div>
-            <div class="results-stat new">
-              <div class="results-stat-number" id="newCount">0</div>
-              <div class="results-stat-label">New Artists</div>
+            <div class="results-stats-item">
+              <div class="results-stats-number" id="newCount">0</div>
+              <div class="results-stats-label">New Artists</div>
             </div>
           </div>
 
-          <div class="artist-list" id="existingArtistsList">
-            <div class="artist-list-header">
-              <span class="dot existing"></span>
-              In Database
-            </div>
-            <div class="artist-tags" id="existingArtistsTags"></div>
-          </div>
+          <div class="artist-grid" id="artistGrid"></div>
 
-          <div class="artist-list" id="newArtistsList">
-            <div class="artist-list-header">
-              <span class="dot new"></span>
-              New Artists
-            </div>
-            <div class="artist-tags" id="newArtistsTags"></div>
-          </div>
-
-          <div class="download-section">
+          <div class="download-bar">
             <a id="downloadLink" href="#" download>
               <svg
                 width="16"
@@ -610,18 +756,14 @@
       const submitBtn = document.getElementById("submitBtn");
       const loading = document.getElementById("loading");
       const errorDiv = document.getElementById("error");
-      const resultsDiv = document.getElementById("results");
+      const mainLayout = document.getElementById("mainLayout");
+      const formCard = document.getElementById("formCard");
+      const imageSection = document.getElementById("imageSection");
+      const resultsColumn = document.getElementById("resultsColumn");
       const resultsHeader = document.getElementById("resultsHeader");
       const existingCount = document.getElementById("existingCount");
       const newCount = document.getElementById("newCount");
-      const existingArtistsList = document.getElementById(
-        "existingArtistsList"
-      );
-      const existingArtistsTags = document.getElementById(
-        "existingArtistsTags"
-      );
-      const newArtistsList = document.getElementById("newArtistsList");
-      const newArtistsTags = document.getElementById("newArtistsTags");
+      const artistGrid = document.getElementById("artistGrid");
       const downloadLink = document.getElementById("downloadLink");
       const dropzone = document.getElementById("dropzone");
       const fileInput = document.getElementById("image");
@@ -629,9 +771,10 @@
       const fileName = document.getElementById("fileName");
       const fileSize = document.getElementById("fileSize");
       const fileRemove = document.getElementById("fileRemove");
-      const imagePreview = document.getElementById("imagePreview");
       const previewImg = document.getElementById("previewImg");
       const resetBtn = document.getElementById("resetBtn");
+
+      const BASE_URL = "https://knokr-base-production.up.railway.app";
 
       const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp"];
 
@@ -671,7 +814,9 @@
         form.reset();
         fileInput.value = "";
         hideFileInfo();
-        resultsDiv.classList.remove("visible");
+        resultsColumn.classList.remove("visible");
+        mainLayout.classList.remove("expanded");
+        formCard.classList.remove("has-image");
         errorDiv.style.display = "none";
       });
 
@@ -686,7 +831,7 @@
         }
 
         errorDiv.style.display = "none";
-        resultsDiv.classList.remove("visible");
+        resultsColumn.classList.remove("visible");
         showFileInfo(file);
         showImagePreview(file);
       }
@@ -701,7 +846,7 @@
       function hideFileInfo() {
         fileInfo.classList.remove("visible");
         dropzone.classList.remove("has-file", "hidden");
-        imagePreview.classList.remove("visible");
+        formCard.classList.remove("has-image");
         previewImg.src = "";
       }
 
@@ -709,7 +854,7 @@
         const reader = new FileReader();
         reader.onload = (e) => {
           previewImg.src = e.target.result;
-          imagePreview.classList.add("visible");
+          formCard.classList.add("has-image");
         };
         reader.readAsDataURL(file);
       }
@@ -722,40 +867,69 @@
         existingCount.textContent = data.existing_artists.length;
         newCount.textContent = data.new_artists.length;
 
-        // Render existing artists
-        existingArtistsTags.innerHTML = "";
-        if (data.existing_artists.length > 0) {
-          existingArtistsList.style.display = "block";
-          data.existing_artists.forEach((artist) => {
-            const tag = document.createElement("span");
-            tag.className = "artist-tag existing";
-            tag.textContent = artist;
-            existingArtistsTags.appendChild(tag);
-          });
-        } else {
-          existingArtistsList.style.display = "none";
-        }
+        // Clear and render artist grid
+        artistGrid.innerHTML = "";
 
-        // Render new artists
-        newArtistsTags.innerHTML = "";
-        if (data.new_artists.length > 0) {
-          newArtistsList.style.display = "block";
-          data.new_artists.forEach((artist) => {
-            const tag = document.createElement("span");
-            tag.className = "artist-tag new";
-            tag.textContent = artist;
-            newArtistsTags.appendChild(tag);
-          });
-        } else {
-          newArtistsList.style.display = "none";
-        }
+        // Render existing artists (with images and links)
+        data.existing_artists.forEach((artist) => {
+          const card = document.createElement("a");
+          card.className = "artist-card";
+          card.href = `${BASE_URL}/a/${artist.slug}`;
+          card.target = "_blank";
+          card.rel = "noopener";
+
+          const img = document.createElement("img");
+          if (artist.imageUrl) {
+            img.src = `${BASE_URL}/_next/image?url=${encodeURIComponent(artist.imageUrl)}&w=750&q=75`;
+          } else {
+            img.src = "";
+            img.style.display = "none";
+            const placeholder = document.createElement("div");
+            placeholder.className = "artist-card-placeholder";
+            placeholder.textContent = artist.name.charAt(0).toUpperCase();
+            card.appendChild(placeholder);
+          }
+          img.alt = artist.name;
+          img.loading = "lazy";
+          if (artist.imageUrl) {
+            card.appendChild(img);
+          }
+
+          const nameDiv = document.createElement("div");
+          nameDiv.className = "artist-card-name";
+          nameDiv.textContent = artist.name;
+          nameDiv.title = artist.name;
+          card.appendChild(nameDiv);
+
+          artistGrid.appendChild(card);
+        });
+
+        // Render new artists (placeholder, no link)
+        data.new_artists.forEach((artistName) => {
+          const card = document.createElement("div");
+          card.className = "artist-card artist-card-new";
+
+          const placeholder = document.createElement("div");
+          placeholder.className = "artist-card-placeholder";
+          placeholder.textContent = artistName.charAt(0).toUpperCase();
+          card.appendChild(placeholder);
+
+          const nameDiv = document.createElement("div");
+          nameDiv.className = "artist-card-name";
+          nameDiv.textContent = artistName;
+          nameDiv.title = artistName;
+          card.appendChild(nameDiv);
+
+          artistGrid.appendChild(card);
+        });
 
         // Set download link
         downloadLink.href = data.csv_download;
         downloadLink.download = data.csv_filename;
 
-        // Show results
-        resultsDiv.classList.add("visible");
+        // Show results column and expand layout
+        mainLayout.classList.add("expanded");
+        resultsColumn.classList.add("visible");
       }
 
       function formatFileSize(bytes) {
@@ -767,7 +941,7 @@
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         errorDiv.style.display = "none";
-        resultsDiv.classList.remove("visible");
+        resultsColumn.classList.remove("visible");
         submitBtn.disabled = true;
         loading.style.display = "flex";
 
