@@ -3,7 +3,7 @@ import csv
 import io
 import base64
 from datetime import datetime
-from flask import Flask, request, render_template, Response
+from flask import Flask, request, render_template, Response, send_from_directory
 from anthropic import Anthropic
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
@@ -86,6 +86,28 @@ def generate_csv(festival_name: str, year: str, artists: list[str]) -> str:
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
+
+
+@app.route('/uploads', methods=['GET'])
+def list_uploads():
+    """List all uploaded files."""
+    files = []
+    for filename in os.listdir(UPLOADS_DIR):
+        filepath = os.path.join(UPLOADS_DIR, filename)
+        stat = os.stat(filepath)
+        files.append({
+            'name': filename,
+            'size': stat.st_size,
+            'modified': datetime.fromtimestamp(stat.st_mtime).isoformat()
+        })
+    files.sort(key=lambda x: x['modified'], reverse=True)
+    return {'files': files}
+
+
+@app.route('/uploads/<filename>', methods=['GET'])
+def get_upload(filename):
+    """Download a specific uploaded file."""
+    return send_from_directory(UPLOADS_DIR, filename)
 
 
 @app.route('/extract', methods=['POST'])
