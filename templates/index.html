@@ -460,31 +460,34 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
+      .artist-card {
+        position: relative;
+      }
       .artist-card img {
         width: 100%;
         aspect-ratio: 1;
         object-fit: cover;
         display: block;
       }
+      .artist-card-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 40px 12px 12px;
+        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+        text-align: center;
+      }
       .artist-card-placeholder {
         width: 100%;
         aspect-ratio: 1;
-        background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #9ca3af;
-        font-size: 24px;
+        background: #1f2937;
       }
       .artist-card-name {
-        padding: 10px 8px;
-        font-size: 13px;
-        font-weight: 500;
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
         text-align: center;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        background: white;
       }
       .artist-card-new {
         opacity: 0.7;
@@ -871,15 +874,16 @@
           } else {
             const placeholder = document.createElement("div");
             placeholder.className = "artist-card-placeholder";
-            placeholder.textContent = artist.name.charAt(0).toUpperCase();
             card.appendChild(placeholder);
           }
 
+          const overlay = document.createElement("div");
+          overlay.className = "artist-card-overlay";
           const nameDiv = document.createElement("div");
           nameDiv.className = "artist-card-name";
           nameDiv.textContent = artist.name;
-          nameDiv.title = artist.name;
-          card.appendChild(nameDiv);
+          overlay.appendChild(nameDiv);
+          card.appendChild(overlay);
 
           artistGrid.appendChild(card);
         });
@@ -891,14 +895,15 @@
 
           const placeholder = document.createElement("div");
           placeholder.className = "artist-card-placeholder";
-          placeholder.textContent = artistName.charAt(0).toUpperCase();
           card.appendChild(placeholder);
 
+          const overlay = document.createElement("div");
+          overlay.className = "artist-card-overlay";
           const nameDiv = document.createElement("div");
           nameDiv.className = "artist-card-name";
           nameDiv.textContent = artistName;
-          nameDiv.title = artistName;
-          card.appendChild(nameDiv);
+          overlay.appendChild(nameDiv);
+          card.appendChild(overlay);
 
           artistGrid.appendChild(card);
         });

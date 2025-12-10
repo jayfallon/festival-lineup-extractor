@@ -9,6 +9,9 @@ from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 import pg8000
 from urllib.parse import urlparse
+from cuid2 import cuid_wrapper
+
+cuid = cuid_wrapper()
 
 load_dotenv()
 
@@ -41,6 +44,15 @@ def get_db_connection():
     )
 
 
+def insert_pending_artist(cursor, name):
+    """Insert a new artist into the PendingArtist table."""
+    cursor.execute("""
+        INSERT INTO "PendingArtist" (id, name, genres, "addedById", "createdAt", "updatedAt")
+        VALUES (%s, %s, %s, 'system-poster-extractor', NOW(), NOW())
+        ON CONFLICT DO NOTHING
+    """, (cuid(), name, []))
+
+
 def check_existing_artists(artist_names: list[str]) -> dict:
     """Check which artists exist in the database and return their details."""
     conn = get_db_connection()
@@ -67,7 +79,10 @@ def check_existing_artists(artist_names: list[str]) -> dict:
                 existing.append(existing_map[name.lower()])
             else:
                 new.append(name)
+                # Insert new artist into PendingArtist table
+                insert_pending_artist(cursor, name)
 
+        conn.commit()
         return {'existing': existing, 'new': new}
     finally:
         conn.close()
