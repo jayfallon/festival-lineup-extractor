@@ -55,9 +55,15 @@ def insert_pending_artist(cursor, name):
 
 def check_existing_artists(artist_names: list[str]) -> dict:
     """Check which artists exist in the database and return their details."""
-    conn = get_db_connection()
+    conn = None
+    try:
+        conn = get_db_connection()
+    except Exception as e:
+        print(f"Database connection failed: {e}")
+        return {'existing': [], 'new': artist_names, 'db_error': True}
+
     if not conn:
-        return {'existing': [], 'new': artist_names}
+        return {'existing': [], 'new': artist_names, 'db_error': False}
 
     try:
         cursor = conn.cursor()
@@ -83,9 +89,15 @@ def check_existing_artists(artist_names: list[str]) -> dict:
                 insert_pending_artist(cursor, name)
 
         conn.commit()
-        return {'existing': existing, 'new': new}
+        return {'existing': existing, 'new': new, 'db_error': False}
+    except Exception as e:
+        print(f"Database query failed: {e}")
+        if conn:
+            conn.rollback()
+        return {'existing': [], 'new': artist_names, 'db_error': True}
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def allowed_file(filename):
@@ -147,6 +159,17 @@ def generate_csv(festival_name: str, year: str, artists: list[str]) -> str:
         writer.writerow([festival_name, year, artist])
 
     return output.getvalue()
+
+
+def generate_json(festival_name: str, year: str, artists: list[str]) -> str:
+    """Generate JSON content from extracted artist data."""
+    import json
+    data = {
+        'festival_name': festival_name,
+        'edition': year,
+        'artists': artists
+    }
+    return json.dumps(data, indent=2)
 
 
 @app.route('/', methods=['GET'])
@@ -228,10 +251,11 @@ def extract():
         # Check which artists exist in the database
         artist_check = check_existing_artists(artists)
 
-        # Generate CSV with all artists
+        # Generate CSV and JSON with all artists
         csv_content = generate_csv(festival_name, year, artists)
+        json_content = generate_json(festival_name, year, artists)
 
-        # Save uploaded image and CSV to uploads directory
+        # Save uploaded image, CSV, and JSON to uploads directory
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         safe_festival = secure_filename(festival_name)
         base_filename = f"{safe_festival}_{year}_{timestamp}"
@@ -248,7 +272,13 @@ def extract():
         with open(csv_path, 'w', newline='') as f:
             f.write(csv_content)
 
-        # Return JSON with artist breakdown and CSV download path
+        # Save JSON
+        json_filename = f"{base_filename}.json"
+        json_path = os.path.join(UPLOADS_DIR, json_filename)
+        with open(json_path, 'w') as f:
+            f.write(json_content)
+
+        # Return response with artist breakdown and download paths
         return jsonify({
             'success': True,
             'festival_name': festival_name,
@@ -256,8 +286,12 @@ def extract():
             'existing_artists': artist_check['existing'],
             'new_artists': artist_check['new'],
             'total_artists': len(artists),
+            'all_artists': artists,
             'csv_filename': csv_filename,
-            'csv_download': f'/uploads/{csv_filename}'
+            'csv_download': f'/uploads/{csv_filename}',
+            'json_filename': json_filename,
+            'json_download': f'/uploads/{json_filename}',
+            'db_error': artist_check.get('db_error', False)
         })
 
     except Exception as e:

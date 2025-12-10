@@ -32,6 +32,7 @@
         width: 180px;
         height: auto;
         margin-bottom: 20px;
+        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
       }
       .page-header h1 {
         font-size: 42px;
@@ -574,15 +575,59 @@
           grid-template-columns: repeat(3, 1fr);
         }
       }
-      @media (max-width: 768px) {
-        .main-layout {
+      @media (max-width: 868px) {
+        .card {
           flex-direction: column;
         }
-        .form-column {
+        .form-section,
+        .image-section {
+          width: 100%;
+        }
+        .card.has-image .image-section {
+          margin-top: 20px;
+        }
+      }
+      @media (max-width: 768px) {
+        .wrapper {
+          padding-top: 20px;
+        }
+        .page-header .logo {
+          width: 140px;
+        }
+        .page-header h1 {
+          font-size: 28px;
+        }
+        .form-section,
+        .image-section {
           width: 100%;
         }
         .artist-grid {
           grid-template-columns: repeat(2, 1fr);
+        }
+        .results-header-row {
+          flex-direction: column;
+          gap: 16px;
+          align-items: flex-start;
+        }
+        .results-actions {
+          flex-wrap: wrap;
+          width: 100%;
+        }
+        .results-actions .btn-reset {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+      @media (max-width: 480px) {
+        .form-row {
+          flex-direction: column;
+          gap: 16px;
+        }
+        .artist-grid {
+          grid-template-columns: repeat(1, 1fr);
+        }
+        .card {
+          padding: 20px;
         }
       }
     </style>
@@ -724,23 +769,24 @@
               Artists Extracted
             </div>
             <div class="results-actions">
-              <a id="downloadLink" href="#" download class="btn-download">
-                <svg
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
+              <a id="downloadCsvLink" href="#" download class="btn-download">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Download CSV
+                CSV
               </a>
+              <a id="downloadJsonLink" href="#" download class="btn-download">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                JSON
+              </a>
+              <button type="button" class="btn-download" id="copyBtn">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Copy
+              </button>
               <button type="button" class="btn-reset" id="resetBtn">
                 Extract Another
               </button>
@@ -773,8 +819,12 @@
       const resultsColumn = document.getElementById("resultsColumn");
       const resultsHeader = document.getElementById("resultsHeader");
       const artistGrid = document.getElementById("artistGrid");
-      const downloadLink = document.getElementById("downloadLink");
+      const downloadCsvLink = document.getElementById("downloadCsvLink");
+      const downloadJsonLink = document.getElementById("downloadJsonLink");
+      const copyBtn = document.getElementById("copyBtn");
       const dropzone = document.getElementById("dropzone");
+
+      let allArtists = [];
       const fileInput = document.getElementById("image");
       const fileInfo = document.getElementById("fileInfo");
       const fileName = document.getElementById("fileName");
@@ -880,8 +930,12 @@
       }
 
       function displayResults(data) {
-        // Update header
-        resultsHeader.textContent = `${data.festival_name} ${data.year} - ${data.total_artists} Artists`;
+        // Update header with optional db error warning
+        let headerText = `${data.festival_name} ${data.year} - ${data.total_artists} Artists`;
+        if (data.db_error) {
+          headerText += " (Database unavailable)";
+        }
+        resultsHeader.textContent = headerText;
 
         // Clear and render artist grid
         artistGrid.innerHTML = "";
@@ -938,13 +992,33 @@
           artistGrid.appendChild(card);
         });
 
-        // Set download link
-        downloadLink.href = data.csv_download;
-        downloadLink.download = data.csv_filename;
+        // Set download links
+        downloadCsvLink.href = data.csv_download;
+        downloadCsvLink.download = data.csv_filename;
+        downloadJsonLink.href = data.json_download;
+        downloadJsonLink.download = data.json_filename;
+
+        // Store all artists for copy functionality
+        allArtists = data.all_artists;
 
         // Show results column
         resultsColumn.classList.add("visible");
       }
+
+      // Copy artist list to clipboard
+      copyBtn.addEventListener("click", async () => {
+        const text = allArtists.join("\n");
+        try {
+          await navigator.clipboard.writeText(text);
+          const originalText = copyBtn.innerHTML;
+          copyBtn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Copied!`;
+          setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+          }, 2000);
+        } catch (err) {
+          console.error("Failed to copy:", err);
+        }
+      });
 
       function formatFileSize(bytes) {
         if (bytes < 1024) return bytes + " B";
