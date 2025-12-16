@@ -60,41 +60,58 @@ def check_existing_artists(artist_names: list[str]) -> dict:
         conn = get_db_connection()
     except Exception as e:
         print(f"Database connection failed: {e}")
-        return {'existing': [], 'new': artist_names, 'db_error': True}
+        return {'existing': [], 'new': artist_names, 'db_error': True, 'genre_breakdown': []}
 
     if not conn:
-        return {'existing': [], 'new': artist_names, 'db_error': False}
+        return {'existing': [], 'new': artist_names, 'db_error': False, 'genre_breakdown': []}
 
     try:
         cursor = conn.cursor()
-        # Use case-insensitive matching, return name, slug, and imageUrl
+        # Use case-insensitive matching, return name, slug, imageUrl, and genres
         query = f"""
-            SELECT name, slug, "imageUrl" FROM "Artist"
+            SELECT name, slug, "imageUrl", genres FROM "Artist"
             WHERE LOWER(name) IN ({','.join(['LOWER(%s)'] * len(artist_names))})
         """
         cursor.execute(query, artist_names)
         existing_map = {
-            row[0].lower(): {'name': row[0], 'slug': row[1], 'imageUrl': row[2]}
+            row[0].lower(): {'name': row[0], 'slug': row[1], 'imageUrl': row[2], 'genres': row[3] or []}
             for row in cursor.fetchall()
         }
 
         existing = []
         new = []
+        genre_counts = {}
+
         for name in artist_names:
             if name.lower() in existing_map:
-                existing.append(existing_map[name.lower()])
+                artist = existing_map[name.lower()]
+                existing.append(artist)
+                # Count genres
+                for genre in artist['genres']:
+                    genre_counts[genre] = genre_counts.get(genre, 0) + 1
             else:
                 new.append(name)
                 # Insert new artist into PendingArtist table
                 insert_pending_artist(cursor, name)
 
+        # Calculate genre breakdown as percentages
+        total_genre_tags = sum(genre_counts.values())
+        genre_breakdown = []
+        if total_genre_tags > 0:
+            for genre, count in sorted(genre_counts.items(), key=lambda x: x[1], reverse=True):
+                genre_breakdown.append({
+                    'genre': genre,
+                    'count': count,
+                    'percentage': round((count / len(existing)) * 100, 1)
+                })
+
         conn.commit()
-        return {'existing': existing, 'new': new, 'db_error': False}
+        return {'existing': existing, 'new': new, 'db_error': False, 'genre_breakdown': genre_breakdown}
     except Exception as e:
         print(f"Database query failed: {e}")
         if conn:
             conn.rollback()
-        return {'existing': [], 'new': artist_names, 'db_error': True}
+        return {'existing': [], 'new': artist_names, 'db_error': True, 'genre_breakdown': []}
     finally:
         if conn:
             conn.close()
@@ -104,8 +121,9 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def extract_artists_from_image(image_data: bytes, media_type: str) -> list[str]:
-    """Use Claude Vision to extract artist names from a festival lineup image."""
+def extract_artists_from_image(image_data: bytes, media_type: str) -> dict:
+    """Use Claude Vision to extract artist names and dates from a festival lineup image."""
+    import json as json_module
     base64_image = base64.b64encode(image_data).decode('utf-8')
 
     message = client.messages.create(
@@ -125,28 +143,51 @@ def extract_artists_from_image(image_data: bytes, media_type: str) -> list[str]:
                     },
                     {
                         "type": "text",
-                        "text": """Analyze this festival lineup image and extract ALL artist/performer names you can see.
+                        "text": """Analyze this festival lineup image and extract:
+1. ALL artist/performer names you can see
+2. The festival dates (start and end date)
 
-Rules:
+Rules for artists:
 - Extract only artist/band/performer names
 - Do NOT include stage names, dates, times, or other text
-- List each artist on a new line
 - Normalize capitalization to the artist's official/proper spelling (e.g., "Skrillex" not "SKRILLEX", "Four Tet" not "FOUR TET")
 - Keep acronyms and stylized names correct (e.g., "SG Lewis", "RÜFÜS DU SOL", "DJ Trixie Mattel", "Aly & AJ")
 - If a name appears multiple times, only list it once
 - Order them roughly by how prominently they appear (headliners first, then smaller acts)
 
-Return ONLY the list of names, one per line, with no additional text or formatting."""
+Rules for dates:
+- Extract the start date and end date of the festival
+- Use ISO format: YYYY-MM-DD
+- If only one date is shown, use it for both start and end
+- If no dates are visible, use null for both
+
+Return your response as JSON in this exact format:
+{
+  "artists": ["Artist 1", "Artist 2", ...],
+  "start_date": "YYYY-MM-DD",
+  "end_date": "YYYY-MM-DD"
+}
+
+Return ONLY the JSON, no other text."""
                     }
                 ],
             }
         ],
     )
 
-    # Parse the response - each line is an artist name
-    response_text = message.content[0].text
-    artists = [line.strip() for line in response_text.strip().split('\n') if line.strip()]
-    return artists
+    # Parse the JSON response
+    response_text = message.content[0].text.strip()
+    # Handle potential markdown code blocks
+    if response_text.startswith('```'):
+        response_text = response_text.split('\n', 1)[1]
+        response_text = response_text.rsplit('```', 1)[0]
+
+    result = json_module.loads(response_text)
+    return {
+        'artists': result.get('artists', []),
+        'start_date': result.get('start_date'),
+        'end_date': result.get('end_date')
+    }
 
 
 def generate_csv(festival_name: str, year: str, artists: list[str]) -> str:
@@ -242,8 +283,11 @@ def extract():
     media_type = media_type_map.get(extension, 'image/jpeg')
 
     try:
-        # Extract artists using Claude Vision
-        artists = extract_artists_from_image(image_data, media_type)
+        # Extract artists and dates using Claude Vision
+        extraction = extract_artists_from_image(image_data, media_type)
+        artists = extraction['artists']
+        start_date = extraction['start_date']
+        end_date = extraction['end_date']
 
         if not artists:
             return {'error': 'No artists found in the image'}, 400
@@ -283,10 +327,13 @@ def extract():
             'success': True,
             'festival_name': festival_name,
             'year': year,
+            'start_date': start_date,
+            'end_date': end_date,
             'existing_artists': artist_check['existing'],
             'new_artists': artist_check['new'],
             'total_artists': len(artists),
             'all_artists': artists,
+            'genre_breakdown': artist_check.get('genre_breakdown', []),
             'csv_filename': csv_filename,
             'csv_download': f'/uploads/{csv_filename}',
             'json_filename': json_filename,

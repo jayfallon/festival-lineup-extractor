@@ -487,14 +487,8 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
-      .artist-card {
+      .artist-card-image {
         position: relative;
-      }
-      .artist-card img {
-        width: 100%;
-        aspect-ratio: 1;
-        object-fit: cover;
-        display: block;
       }
       .artist-card-overlay {
         position: absolute;
@@ -503,16 +497,21 @@
         right: 0;
         padding: 40px 12px 12px;
         background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
-        text-align: center;
+      }
+      .artist-card img {
+        width: 100%;
+        aspect-ratio: 1.618 / 1;
+        object-fit: cover;
+        display: block;
       }
       .artist-card-placeholder {
         width: 100%;
-        aspect-ratio: 1;
+        aspect-ratio: 1.618 / 1;
         background: #1f2937;
       }
       .artist-card-name {
-        font-size: 16px;
-        font-weight: 600;
+        font-size: 14px;
+        font-weight: 500;
         color: white;
         text-align: center;
       }
@@ -522,6 +521,25 @@
       .artist-card-new:hover {
         transform: none;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .genre-breakdown {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+      .genre-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        font-size: 13px;
+        color: white;
+      }
+      .genre-tag-pct {
+        font-weight: 600;
       }
       .results-header-row {
         display: flex;
@@ -793,6 +811,8 @@
             </div>
           </div>
 
+          <div class="genre-breakdown" id="genreBreakdown"></div>
+
           <div class="artist-grid" id="artistGrid"></div>
         </div>
       </div>
@@ -818,6 +838,7 @@
       const imageSection = document.getElementById("imageSection");
       const resultsColumn = document.getElementById("resultsColumn");
       const resultsHeader = document.getElementById("resultsHeader");
+      const genreBreakdown = document.getElementById("genreBreakdown");
       const artistGrid = document.getElementById("artistGrid");
       const downloadCsvLink = document.getElementById("downloadCsvLink");
       const downloadJsonLink = document.getElementById("downloadJsonLink");
@@ -929,13 +950,40 @@
         reader.readAsDataURL(file);
       }
 
+      function formatDate(dateStr) {
+        if (!dateStr) return null;
+        const date = new Date(dateStr + 'T00:00:00');
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+
       function displayResults(data) {
-        // Update header with optional db error warning
-        let headerText = `${data.festival_name} ${data.year} - ${data.total_artists} Artists`;
+        // Build header text
+        let headerText = `${data.festival_name} ${data.year}`;
+        if (data.start_date && data.end_date) {
+          const start = formatDate(data.start_date);
+          const end = formatDate(data.end_date);
+          if (start === end) {
+            headerText += ` (${start})`;
+          } else {
+            headerText += ` (${start} - ${end})`;
+          }
+        }
+        headerText += ` - ${data.total_artists} Artists`;
         if (data.db_error) {
           headerText += " (Database unavailable)";
         }
         resultsHeader.textContent = headerText;
+
+        // Render genre breakdown
+        genreBreakdown.innerHTML = "";
+        if (data.genre_breakdown && data.genre_breakdown.length > 0) {
+          data.genre_breakdown.forEach((item) => {
+            const tag = document.createElement("span");
+            tag.className = "genre-tag";
+            tag.innerHTML = `${item.genre} <span class="genre-tag-pct">${item.percentage}%</span>`;
+            genreBreakdown.appendChild(tag);
+          });
+        }
 
         // Clear and render artist grid
         artistGrid.innerHTML = "";
@@ -948,17 +996,20 @@
           card.target = "_blank";
           card.rel = "noopener";
 
+          const imageWrapper = document.createElement("div");
+          imageWrapper.className = "artist-card-image";
+
           const imageUrl = getArtistImageUrl(artist.imageUrl);
           if (imageUrl) {
             const img = document.createElement("img");
             img.src = imageUrl;
             img.alt = artist.name;
             img.loading = "lazy";
-            card.appendChild(img);
+            imageWrapper.appendChild(img);
           } else {
             const placeholder = document.createElement("div");
             placeholder.className = "artist-card-placeholder";
-            card.appendChild(placeholder);
+            imageWrapper.appendChild(placeholder);
           }
 
           const overlay = document.createElement("div");
@@ -967,8 +1018,9 @@
           nameDiv.className = "artist-card-name";
           nameDiv.textContent = artist.name;
           overlay.appendChild(nameDiv);
-          card.appendChild(overlay);
+          imageWrapper.appendChild(overlay);
 
+          card.appendChild(imageWrapper);
           artistGrid.appendChild(card);
         });
 
@@ -977,9 +1029,12 @@
           const card = document.createElement("div");
           card.className = "artist-card artist-card-new";
 
+          const imageWrapper = document.createElement("div");
+          imageWrapper.className = "artist-card-image";
+
           const placeholder = document.createElement("div");
           placeholder.className = "artist-card-placeholder";
-          card.appendChild(placeholder);
+          imageWrapper.appendChild(placeholder);
 
           const overlay = document.createElement("div");
           overlay.className = "artist-card-overlay";
@@ -987,8 +1042,9 @@
           nameDiv.className = "artist-card-name";
           nameDiv.textContent = artistName;
           overlay.appendChild(nameDiv);
-          card.appendChild(overlay);
+          imageWrapper.appendChild(overlay);
 
+          card.appendChild(imageWrapper);
           artistGrid.appendChild(card);
         });
 
