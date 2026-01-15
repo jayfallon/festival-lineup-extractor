@@ -1,18 +1,40 @@
-# Festival Lineup Extractor
+# Lineups by Knokr
 
-A web app by [Knokr](https://knokr.com) that extracts artist names from festival lineup poster images using Claude's vision API and exports them to CSV.
+A web app by [Knokr](https://knokr.com) that uses AI vision to extract artist names from festival lineup poster images.
+
+## Purpose
+
+Festival lineup posters are visually rich but difficult to parse programmatically. This tool solves that by using Claude's vision capabilities to read lineup images and extract structured artist data. It's designed to help music industry professionals, festival organizers, and data teams quickly digitize lineup information for analysis, database population, or content creation.
+
+## How It Works
+
+1. **Upload** a festival lineup poster image (PNG, JPG, GIF, or WebP)
+2. **Enter** the festival name and year
+3. **Extract** - Claude's vision API analyzes the image and identifies all artist names
+4. **Review** results with artist cards showing known artists from the database
+5. **Export** to CSV or JSON, or copy the artist list to clipboard
 
 ## Features
 
-- Upload festival lineup images (PNG, JPG, JPEG, GIF, WebP)
-- Automatically extracts artist/performer names using AI vision
-- Normalizes artist name capitalization
-- Orders artists by prominence (headliners first)
-- Checks extracted artists against a PostgreSQL database
-- Displays artist cards with images for known artists (linked to artist pages)
-- New artists automatically added to PendingArtist queue for review
-- Exports to CSV with festival name and year
-- Persists uploaded images and generated CSVs
+- **AI-Powered Extraction**: Uses Claude Sonnet's vision capabilities to read and parse lineup posters
+- **Smart Normalization**: Corrects artist name capitalization (e.g., "SKRILLEX" → "Skrillex") while preserving stylized names (e.g., "RÜFÜS DU SOL")
+- **Prominence Ordering**: Returns artists ordered by visual prominence (headliners first)
+- **Date Detection**: Automatically extracts festival dates when visible on the poster
+- **Database Integration**: Cross-references extracted artists against a PostgreSQL artist database
+- **Genre Analysis**: Shows genre breakdown percentages for known artists
+- **Artist Cards**: Displays image cards for known artists with links to their profiles
+- **Pending Queue**: New/unknown artists are automatically added to a review queue
+- **Multiple Export Formats**: Download as CSV, JSON, or copy to clipboard
+- **Responsive Design**: Works on desktop and mobile devices
+
+## Tech Stack
+
+- **Backend**: Python 3.13, Flask 3.0
+- **AI**: Anthropic Claude API (claude-sonnet-4-20250514) for vision analysis
+- **Database**: PostgreSQL via pg8000 driver
+- **ID Generation**: cuid2 for unique identifiers
+- **Production Server**: Gunicorn
+- **Deployment**: Railway
 
 ## Setup
 
@@ -37,18 +59,20 @@ For development with hot reload:
 FLASK_DEBUG=true python app.py
 ```
 
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `ANTHROPIC_API_KEY` | Yes | Your Anthropic API key for Claude |
+| `DATABASE_URL` | No | PostgreSQL connection string for artist lookup |
+| `NEXT_PUBLIC_CLOUDFRONT_URL` | No | CloudFront URL for artist images |
+| `UPLOADS_DIR` | No | Directory for file storage (default: ./uploads) |
+| `PORT` | No | Server port (default: 5000) |
+| `FLASK_DEBUG` | No | Set to `true` for development hot reload |
+
 ## Deployment
 
-The app is configured for Railway deployment with gunicorn.
-
-### Environment Variables
-
-- `ANTHROPIC_API_KEY` - Required. Your Anthropic API key
-- `DATABASE_URL` - Optional. PostgreSQL connection string for artist lookup
-- `NEXT_PUBLIC_CLOUDFRONT_URL` - Optional. CloudFront URL for artist images
-- `UPLOADS_DIR` - Optional. Directory for persistent file storage (default: ./uploads)
-- `PORT` - Optional. Server port (default: 5000)
-- `FLASK_DEBUG` - Optional. Set to `true` for development hot reload
+The app is configured for Railway deployment with Gunicorn.
 
 ### Railway Setup
 
@@ -56,8 +80,13 @@ The app is configured for Railway deployment with gunicorn.
 2. Add the environment variables above
 3. Optionally attach a volume mounted to `/app/uploads` and set `UPLOADS_DIR=/app/uploads`
 
-## Pages
+## API Endpoints
 
-- `/` - Main app for uploading and extracting lineups
-- `/terms` - Terms of Service
-- `/privacy` - Privacy & Data Policy
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/` | Main app interface |
+| POST | `/extract` | Upload image and extract artists |
+| GET | `/uploads` | List all uploaded files |
+| GET | `/uploads/<filename>` | Download a specific file |
+| GET | `/terms` | Terms of Service |
+| GET | `/privacy` | Privacy & Data Policy |
