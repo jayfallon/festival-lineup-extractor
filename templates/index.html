@@ -921,15 +921,22 @@
         if (!imageUrl || imageUrl === "a-few-moments-later.png") {
           return null;
         }
-        if (imageUrl.startsWith("http")) {
-          return imageUrl;
+        // Trim any whitespace
+        const trimmed = imageUrl.trim();
+        if (trimmed.startsWith("http")) {
+          return trimmed;
         }
-        // New format: media/artists/slug/filename.ext
-        if (imageUrl.startsWith("media/")) {
-          return `${CLOUDFRONT_URL}/${imageUrl}`;
+        // Media path format: media/artists/slug/filename.ext (serve directly)
+        if (trimmed.startsWith("media/") || trimmed.includes("/media/")) {
+          const cleanPath = trimmed.startsWith("/") ? trimmed.slice(1) : trimmed;
+          return `${CLOUDFRONT_URL}/${cleanPath}`;
         }
-        // Old format: just filename
-        const filename = imageUrl.split(".")[0];
+        // Transformed webp filename (e.g., "slug-123456-abc.webp")
+        if (trimmed.endsWith(".webp")) {
+          return `${CLOUDFRONT_URL}/transformed/artists/images/${trimmed}`;
+        }
+        // Legacy filename without extension
+        const filename = trimmed.split(".")[0];
         return `${CLOUDFRONT_URL}/transformed/artists/images/${filename}.webp`;
       }
 
