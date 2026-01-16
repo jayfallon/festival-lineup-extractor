@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Search: {{ query }} - Lineups by Knokr{% endblock %}
+
+{% block content %}
+<div class="page-title">
+  <h1>Search Results</h1>
+  <p>{% if festivals %}{{ festivals|length }} result{% if festivals|length != 1 %}s{% endif %} for "{{ query }}"{% else %}No results for "{{ query }}"{% endif %}</p>
+</div>
+
+{% if festivals %}
+<section>
+  <div class="grid-4col">
+    {% for festival in festivals %}
+    <a href="/festival/{{ festival.slug }}" class="festival-card">
+      <div class="card-image-wrapper">
+        {% if festival.imageUrl %}
+        <img src="{{ get_festival_image_url(festival.imageUrl) }}" alt="{{ festival.name }}" loading="lazy" />
+        {% else %}
+        <div class="card-placeholder">{{ festival.name[0] }}</div>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <h3>{{ festival.name }}</h3>
+        <p>{{ format_location(festival.city, festival.country, festival.region) }}</p>
+        {% if festival.startDate %}
+        <p>{{ format_date(festival.startDate) }}{% if festival.endDate and festival.endDate != festival.startDate %} - {{ format_date(festival.endDate) }}{% endif %}</p>
+        {% endif %}
+        {% if festival.genres and festival.genres|length > 0 %}
+        <span class="card-genre">{{ format_genre(festival.genres[0]) }}</span>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<div style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.7);">
+  <p>No festivals found matching your search.</p>
+  <p style="margin-top: 12px;">
+    <a href="/" style="color: #ff6699;">Browse all festivals</a>
+  </p>
+</div>
+{% endif %}
+{% endblock %}

@@ -20,11 +20,122 @@ app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max file size
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 UPLOADS_DIR = os.environ.get('UPLOADS_DIR', os.path.join(os.path.dirname(__file__), 'uploads'))
+CLOUDFRONT_URL = os.environ.get('NEXT_PUBLIC_CLOUDFRONT_URL', '')
+BASE_URL = "https://knokr-base-production.up.railway.app"
 
 # Ensure uploads directory exists
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 client = Anthropic()
+
+
+def get_festival_image_url(image_url):
+    """Get the full URL for a festival image."""
+    if not image_url:
+        return None
+    trimmed = image_url.strip()
+    if trimmed.startswith('http'):
+        return trimmed
+    if trimmed.startswith('media/') or '/media/' in trimmed:
+        clean_path = trimmed.lstrip('/')
+        return f"{CLOUDFRONT_URL}/{clean_path}"
+    if trimmed.endswith('.webp'):
+        return f"{CLOUDFRONT_URL}/transformed/festivals/images/{trimmed}"
+    filename = trimmed.split('.')[0]
+    return f"{CLOUDFRONT_URL}/transformed/festivals/images/{filename}.webp"
+
+
+def get_artist_image_url(image_url):
+    """Get the full URL for an artist image."""
+    if not image_url or image_url == 'a-few-moments-later.png':
+        return None
+    trimmed = image_url.strip()
+    # Only allow CloudFront URLs - external URLs won't work reliably
+    if trimmed.startswith('http'):
+        if CLOUDFRONT_URL and trimmed.startswith(CLOUDFRONT_URL):
+            return trimmed
+        # Return None for non-CloudFront URLs to show placeholder
+        return None
+    # New format: full relative path (e.g., media/artists/slug/filename.jpg)
+    if trimmed.startswith('media/') or trimmed.startswith('/media/'):
+        path = trimmed if trimmed.startswith('/') else f'/{trimmed}'
+        return f"{CLOUDFRONT_URL}{path}"
+    # Old format: just filename → transformed/artists/images/{filename}.webp
+    filename = trimmed.split('.')[0]
+    return f"{CLOUDFRONT_URL}/transformed/artists/images/{filename}.webp"
+
+
+def format_date(date_value):
+    """Format a date for display."""
+    if not date_value:
+        return None
+    if isinstance(date_value, str):
+        date_value = datetime.fromisoformat(date_value.replace('Z', '+00:00'))
+    return date_value.strftime('%b %d, %Y')
+
+
+def format_location(city, country, region=None):
+    """Format location as city, country or city, region for US/UK."""
+    if not city:
+        return country or ''
+
+    # For US and UK, use city, region format
+    if country in ('United States', 'USA', 'US', 'United Kingdom', 'UK', 'England', 'Scotland', 'Wales', 'Northern Ireland'):
+        if region:
+            return f"{city}, {region}"
+        return city
+
+    # For other countries, use city, country format
+    if country:
+        return f"{city}, {country}"
+    return city
+
+
+def format_genre(genre):
+    """Normalize genre spelling for display."""
+    if not genre:
+        return ''
+
+    # Special case mappings (lowercase key -> display value)
+    special_cases = {
+        'edm': 'EDM',
+        'dj': 'DJ',
+        'r&b': 'R&B',
+        'rnb': 'R&B',
+        'hip-hop': 'Hip-Hop',
+        'hip hop': 'Hip-Hop',
+        'hiphop': 'Hip-Hop',
+        'k-pop': 'K-Pop',
+        'kpop': 'K-Pop',
+        'j-pop': 'J-Pop',
+        'jpop': 'J-Pop',
+        'uk garage': 'UK Garage',
+        'uk bass': 'UK Bass',
+        'drum and bass': 'Drum & Bass',
+        'drum & bass': 'Drum & Bass',
+        'dnb': 'Drum & Bass',
+        'd&b': 'Drum & Bass',
+        'lo-fi': 'Lo-Fi',
+        'lofi': 'Lo-Fi',
+        'synthwave': 'Synthwave',
+        'synthpop': 'Synthpop',
+        'post-punk': 'Post-Punk',
+        'post punk': 'Post-Punk',
+        'neo-soul': 'Neo-Soul',
+        'neo soul': 'Neo-Soul',
+        'afrobeats': 'Afrobeats',
+        'afrobeat': 'Afrobeats',
+        'latin': 'Latin',
+        'reggaeton': 'Reggaeton',
+        'uk drill': 'UK Drill',
+    }
+
+    lower_genre = genre.lower().strip()
+    if lower_genre in special_cases:
+        return special_cases[lower_genre]
+
+    # Default: title case
+    return genre.strip().title()
 
 
 def get_db_connection():
@@ -214,9 +325,232 @@ def generate_json(festival_name: str, year: str, artists: list[str]) -> str:
 
 
 @app.route('/', methods=['GET'])
-def index():
-    cloudfront_url = os.environ.get('NEXT_PUBLIC_CLOUDFRONT_URL', '')
-    return render_template('index.html', cloudfront_url=cloudfront_url, current_year=datetime.now().year)
+def home():
+    """Homepage - display upcoming and latest festivals."""
+    upcoming_festivals = []
+    latest_festivals = []
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor()
+
+            # Upcoming festivals (startDate >= today, ordered by startDate ASC)
+            cursor.execute("""
+                SELECT id, name, slug, "imageUrl", city, country, region, "startDate", "endDate", genres
+                FROM "Festival"
+                WHERE "isActive" = true AND "startDate" >= CURRENT_DATE
+                ORDER BY "startDate" ASC
+                LIMIT 12
+            """)
+            rows = cursor.fetchall()
+            for row in rows:
+                upcoming_festivals.append({
+                    'id': row[0],
+                    'name': row[1],
+                    'slug': row[2],
+                    'imageUrl': row[3],
+                    'city': row[4],
+                    'country': row[5],
+                    'region': row[6],
+                    'startDate': row[7],
+                    'endDate': row[8],
+                    'genres': row[9] or []
+                })
+
+            # Latest festivals (ordered by updatedAt DESC)
+            cursor.execute("""
+                SELECT id, name, slug, "imageUrl", city, country, region, "startDate", "endDate", genres
+                FROM "Festival"
+                WHERE "isActive" = true
+                ORDER BY "updatedAt" DESC
+                LIMIT 12
+            """)
+            rows = cursor.fetchall()
+            for row in rows:
+                latest_festivals.append({
+                    'id': row[0],
+                    'name': row[1],
+                    'slug': row[2],
+                    'imageUrl': row[3],
+                    'city': row[4],
+                    'country': row[5],
+                    'region': row[6],
+                    'startDate': row[7],
+                    'endDate': row[8],
+                    'genres': row[9] or []
+                })
+    except Exception as e:
+        print(f"Error fetching festivals: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+    return render_template('home.html',
+                           upcoming_festivals=upcoming_festivals,
+                           latest_festivals=latest_festivals,
+                           current_year=datetime.now().year,
+                           get_festival_image_url=get_festival_image_url,
+                           format_date=format_date,
+                           format_location=format_location,
+                           format_genre=format_genre)
+
+
+@app.route('/extractor', methods=['GET'])
+def extractor():
+    """Lineup extraction tool."""
+    return render_template('extractor.html',
+                           cloudfront_url=CLOUDFRONT_URL,
+                           current_year=datetime.now().year)
+
+
+@app.route('/festival/<slug>', methods=['GET'])
+def festival_detail(slug):
+    """Festival detail page with lineup."""
+    festival = None
+    artists = []
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor()
+            # Get festival details
+            cursor.execute("""
+                SELECT id, name, slug, "imageUrl", city, country, region, "startDate", "endDate",
+                       genres, website, spotify, instagram, facebook, youtube, tiktok, "isCruise"
+                FROM "Festival"
+                WHERE slug = %s
+            """, (slug,))
+            row = cursor.fetchone()
+            if row:
+                festival = {
+                    'id': row[0],
+                    'name': row[1],
+                    'slug': row[2],
+                    'imageUrl': row[3],
+                    'city': row[4],
+                    'country': row[5],
+                    'region': row[6],
+                    'startDate': row[7],
+                    'endDate': row[8],
+                    'genres': row[9] or [],
+                    'website': row[10],
+                    'spotify': row[11],
+                    'instagram': row[12],
+                    'facebook': row[13],
+                    'youtube': row[14],
+                    'tiktok': row[15],
+                    'isCruise': row[16]
+                }
+
+                # Get lineup artists with all fields for Orchestra-style cards
+                cursor.execute("""
+                    SELECT a.id, a.name, a.slug, a."imageUrl", a.genres,
+                           a.city, a.region, a.country,
+                           a.spotify, a.instagram, a.youtube, a.tiktok, a.soundcloud, a.website
+                    FROM "Artist" a
+                    JOIN "FestivalLineup" fl ON a.id = fl."artistId"
+                    WHERE fl."festivalId" = %s
+                    ORDER BY a.name
+                """, (festival['id'],))
+                artist_rows = cursor.fetchall()
+                for artist_row in artist_rows:
+                    # Build socials list like Orchestra
+                    socials = []
+                    if artist_row[8]:  # spotify
+                        socials.append({'network': 'spotify', 'url': artist_row[8]})
+                    if artist_row[9]:  # instagram
+                        socials.append({'network': 'instagram', 'url': artist_row[9]})
+                    if artist_row[10]:  # youtube
+                        socials.append({'network': 'youtube', 'url': artist_row[10]})
+                    if artist_row[11]:  # tiktok
+                        socials.append({'network': 'tiktok', 'url': artist_row[11]})
+                    if artist_row[12]:  # soundcloud
+                        socials.append({'network': 'soundcloud', 'url': artist_row[12]})
+                    if artist_row[13]:  # website
+                        socials.append({'network': 'website', 'url': artist_row[13]})
+
+                    artists.append({
+                        'id': artist_row[0],
+                        'name': artist_row[1],
+                        'slug': artist_row[2],
+                        'imageUrl': artist_row[3],
+                        'genres': artist_row[4] or [],
+                        'city': artist_row[5],
+                        'region': artist_row[6],
+                        'country': artist_row[7],
+                        'socials': socials[:3]  # Max 3 like Orchestra
+                    })
+    except Exception as e:
+        print(f"Error fetching festival: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+    if not festival:
+        return "Festival not found", 404
+
+    return render_template('festival.html',
+                           festival=festival,
+                           artists=artists,
+                           current_year=datetime.now().year,
+                           base_url=BASE_URL,
+                           get_festival_image_url=get_festival_image_url,
+                           get_artist_image_url=get_artist_image_url,
+                           format_date=format_date,
+                           format_location=format_location,
+                           format_genre=format_genre)
+
+
+@app.route('/search', methods=['GET'])
+def search():
+    """Search festivals."""
+    query = request.args.get('q', '').strip()
+    festivals = []
+
+    if query:
+        conn = None
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                search_term = f"%{query.lower()}%"
+                cursor.execute("""
+                    SELECT id, name, slug, "imageUrl", city, country, region, "startDate", "endDate", genres
+                    FROM "Festival"
+                    WHERE "isActive" = true
+                      AND (LOWER(name) LIKE %s OR LOWER(city) LIKE %s OR LOWER(country) LIKE %s)
+                    ORDER BY "startDate" DESC
+                    LIMIT 50
+                """, (search_term, search_term, search_term))
+                rows = cursor.fetchall()
+                for row in rows:
+                    festivals.append({
+                        'id': row[0],
+                        'name': row[1],
+                        'slug': row[2],
+                        'imageUrl': row[3],
+                        'city': row[4],
+                        'country': row[5],
+                        'region': row[6],
+                        'startDate': row[7],
+                        'endDate': row[8],
+                        'genres': row[9] or []
+                    })
+        except Exception as e:
+            print(f"Error searching festivals: {e}")
+        finally:
+            if conn:
+                conn.close()
+
+    return render_template('search.html',
+                           festivals=festivals,
+                           query=query,
+                           current_year=datetime.now().year,
+                           get_festival_image_url=get_festival_image_url,
+                           format_date=format_date,
+                           format_location=format_location,
+                           format_genre=format_genre)
 
 
 @app.route('/terms', methods=['GET'])

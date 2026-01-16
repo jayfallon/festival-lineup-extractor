@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Lineups by Knokr - Festival Lineups{% endblock %}
+
+{% block content %}
+<div class="page-title">
+  <h1>Festival Lineups</h1>
+  <p>Discover the latest festival lineups and artists</p>
+</div>
+
+{% if upcoming_festivals %}
+<section style="margin-bottom: 48px;">
+  <div class="section-header">
+    <h2>Upcoming Festivals</h2>
+  </div>
+
+  <div class="grid-4col">
+    {% for festival in upcoming_festivals %}
+    <a href="/festival/{{ festival.slug }}" class="festival-card">
+      <div class="card-image-wrapper">
+        {% if festival.imageUrl %}
+        <img src="{{ get_festival_image_url(festival.imageUrl) }}" alt="{{ festival.name }}" loading="lazy" />
+        {% else %}
+        <div class="card-placeholder">{{ festival.name[0] }}</div>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <h3>{{ festival.name }}</h3>
+        <p>{{ format_location(festival.city, festival.country, festival.region) }}</p>
+        {% if festival.startDate %}
+        <p>{{ format_date(festival.startDate) }}{% if festival.endDate and festival.endDate != festival.startDate %} - {{ format_date(festival.endDate) }}{% endif %}</p>
+        {% endif %}
+        {% if festival.genres and festival.genres|length > 0 %}
+        <span class="card-genre">{{ format_genre(festival.genres[0]) }}</span>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section>
+  <div class="section-header">
+    <h2>Latest Festivals</h2>
+  </div>
+
+  {% if latest_festivals %}
+  <div class="grid-4col">
+    {% for festival in latest_festivals %}
+    <a href="/festival/{{ festival.slug }}" class="festival-card">
+      <div class="card-image-wrapper">
+        {% if festival.imageUrl %}
+        <img src="{{ get_festival_image_url(festival.imageUrl) }}" alt="{{ festival.name }}" loading="lazy" />
+        {% else %}
+        <div class="card-placeholder">{{ festival.name[0] }}</div>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <h3>{{ festival.name }}</h3>
+        <p>{{ format_location(festival.city, festival.country, festival.region) }}</p>
+        {% if festival.startDate %}
+        <p>{{ format_date(festival.startDate) }}{% if festival.endDate and festival.endDate != festival.startDate %} - {{ format_date(festival.endDate) }}{% endif %}</p>
+        {% endif %}
+        {% if festival.genres and festival.genres|length > 0 %}
+        <span class="card-genre">{{ format_genre(festival.genres[0]) }}</span>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.7);">
+    <p>No festivals found.</p>
+    <p style="margin-top: 12px;">
+      <a href="/extractor" style="color: #ff6699;">Extract a lineup</a> to get started.
+    </p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
