@@ -924,6 +924,11 @@
         if (imageUrl.startsWith("http")) {
           return imageUrl;
         }
+        // New format: media/artists/slug/filename.ext
+        if (imageUrl.startsWith("media/")) {
+          return `${CLOUDFRONT_URL}/${imageUrl}`;
+        }
+        // Old format: just filename
         const filename = imageUrl.split(".")[0];
         return `${CLOUDFRONT_URL}/transformed/artists/images/${filename}.webp`;
       }
