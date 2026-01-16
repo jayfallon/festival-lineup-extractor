@@ -59,27 +59,9 @@
         justify-content: space-between;
         gap: 24px;
       }
-      .header-logo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .header-logo img {
-        height: 40px;
-        width: auto;
-        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
-      }
-      .header-logo span {
-        font-size: 24px;
-        font-weight: 700;
-        color: white;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      }
-
       /* Search Bar */
       .search-container {
-        flex: 1;
-        max-width: 400px;
+        width: 300px;
       }
       .search-form {
         position: relative;
@@ -156,6 +138,42 @@
         }
       }
 
+      /* Card Animation */
+      @keyframes cardFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .grid-4col > *:nth-child(1) { animation-delay: 0s; }
+      .grid-4col > *:nth-child(2) { animation-delay: 0.05s; }
+      .grid-4col > *:nth-child(3) { animation-delay: 0.1s; }
+      .grid-4col > *:nth-child(4) { animation-delay: 0.15s; }
+      .grid-4col > *:nth-child(5) { animation-delay: 0.2s; }
+      .grid-4col > *:nth-child(6) { animation-delay: 0.25s; }
+      .grid-4col > *:nth-child(7) { animation-delay: 0.3s; }
+      .grid-4col > *:nth-child(8) { animation-delay: 0.35s; }
+      .grid-4col > *:nth-child(9) { animation-delay: 0.4s; }
+      .grid-4col > *:nth-child(10) { animation-delay: 0.45s; }
+      .grid-4col > *:nth-child(11) { animation-delay: 0.5s; }
+      .grid-4col > *:nth-child(12) { animation-delay: 0.55s; }
+      .grid-4col > *:nth-child(13) { animation-delay: 0.6s; }
+      .grid-4col > *:nth-child(14) { animation-delay: 0.65s; }
+      .grid-4col > *:nth-child(15) { animation-delay: 0.7s; }
+      .grid-4col > *:nth-child(16) { animation-delay: 0.75s; }
+      .grid-4col > *:nth-child(17) { animation-delay: 0.8s; }
+      .grid-4col > *:nth-child(18) { animation-delay: 0.85s; }
+      .grid-4col > *:nth-child(19) { animation-delay: 0.9s; }
+      .grid-4col > *:nth-child(20) { animation-delay: 0.95s; }
+      .grid-4col > *:nth-child(21) { animation-delay: 1s; }
+      .grid-4col > *:nth-child(22) { animation-delay: 1.05s; }
+      .grid-4col > *:nth-child(23) { animation-delay: 1.1s; }
+      .grid-4col > *:nth-child(24) { animation-delay: 1.15s; }
+
       /* Festival Card */
       .festival-card {
         display: block;
@@ -163,12 +181,40 @@
         border-radius: 8px;
         overflow: hidden;
         transition: transform 0.2s, box-shadow 0.2s;
+        animation: cardFadeIn 0.4s ease-out forwards;
+        opacity: 0;
       }
       .festival-card:hover {
         transform: scale(1.02);
         box-shadow: 0 0 30px rgba(204, 30, 108, 0.4);
       }
+      .festival-socials {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        padding: 4px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        z-index: 10;
+      }
+      .festival-card:hover .festival-socials {
+        opacity: 1;
+      }
+      .festival-socials-inner {
+        display: flex;
+        gap: 4px;
+        background: rgba(0, 10, 20, 0.9);
+        padding: 4px;
+        border-radius: 9999px;
+      }
+      .festival-card .card-body {
+        display: block;
+      }
       .festival-card .card-image-wrapper {
+        display: block;
         position: relative;
         width: 100%;
         overflow: hidden;
@@ -179,6 +225,10 @@
         display: block;
         object-fit: contain;
         object-position: top;
+        transition: transform 0.3s ease;
+      }
+      .festival-card:hover .card-image-wrapper img {
+        transform: scale(1.05);
       }
       .festival-card .card-placeholder {
         width: 100%;
@@ -227,6 +277,20 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
+      .festival-name {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-decoration: none;
+      }
+      .festival-name:hover {
+        text-decoration: underline;
+      }
       .card-body p {
         font-size: 12px;
         color: rgba(255, 255, 255, 0.7);
@@ -250,6 +314,8 @@
         overflow: hidden;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         transition: box-shadow 0.3s;
+        animation: cardFadeIn 0.4s ease-out forwards;
+        opacity: 0;
       }
       .artist-card:hover {
         box-shadow: 0 0 30px rgba(204, 30, 108, 0.4);
@@ -398,12 +464,12 @@
         color: white;
       }
       .section-header a {
-        color: #ff6699;
-        font-size: 14px;
-        font-weight: 500;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
       }
       .section-header a:hover {
-        text-decoration: underline;
+        color: #ff6699;
       }
 
       /* Page Title */
@@ -430,8 +496,7 @@
           gap: 16px;
         }
         .search-container {
-          order: 3;
-          max-width: 100%;
+          order: 2;
           width: 100%;
         }
         .header-nav {
@@ -444,10 +509,11 @@
   </head>
   <body>
     <header class="site-header">
-      <a href="/" class="header-logo">
-        <img src="/static/knokr.svg" alt="Knokr" />
-        <span>Lineups</span>
-      </a>
+      <nav class="header-nav">
+        <a href="/">Home</a>
+        <a href="/festivals">Festivals</a>
+        <a href="/extractor">Extractor</a>
+      </nav>
 
       <div class="search-container">
         <form action="/search" method="GET" class="search-form">
@@ -457,10 +523,6 @@
           <input type="text" name="q" class="search-input" placeholder="Search festivals..." value="{{ request.args.get('q', '') }}" />
         </form>
       </div>
-
-      <nav class="header-nav">
-        <a href="/extractor">Extract Lineup</a>
-      </nav>
     </header>
 
     <main class="main-content">

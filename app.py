@@ -337,7 +337,8 @@ def home():
 
             # Upcoming festivals (startDate >= today, ordered by startDate ASC)
             cursor.execute("""
-                SELECT id, name, slug, "imageUrl", city, country, region, "startDate", "endDate", genres
+                SELECT id, name, slug, "imageUrl", city, country, region, "startDate", "endDate", genres,
+                       website, spotify, instagram, facebook, youtube, tiktok
                 FROM "Festival"
                 WHERE "isActive" = true AND "startDate" >= CURRENT_DATE
                 ORDER BY "startDate" ASC
@@ -345,6 +346,13 @@ def home():
             """)
             rows = cursor.fetchall()
             for row in rows:
+                socials = []
+                if row[11]: socials.append({'network': 'spotify', 'url': row[11]})
+                if row[12]: socials.append({'network': 'instagram', 'url': row[12]})
+                if row[14]: socials.append({'network': 'youtube', 'url': row[14]})
+                if row[15]: socials.append({'network': 'tiktok', 'url': row[15]})
+                if row[13]: socials.append({'network': 'facebook', 'url': row[13]})
+                if row[10]: socials.append({'network': 'website', 'url': row[10]})
                 upcoming_festivals.append({
                     'id': row[0],
                     'name': row[1],
@@ -355,12 +363,14 @@ def home():
                     'region': row[6],
                     'startDate': row[7],
                     'endDate': row[8],
-                    'genres': row[9] or []
+                    'genres': row[9] or [],
+                    'socials': socials[:3]
                 })
 
             # Latest festivals (ordered by updatedAt DESC)
             cursor.execute("""
-                SELECT id, name, slug, "imageUrl", city, country, region, "startDate", "endDate", genres
+                SELECT id, name, slug, "imageUrl", city, country, region, "startDate", "endDate", genres,
+                       website, spotify, instagram, facebook, youtube, tiktok
                 FROM "Festival"
                 WHERE "isActive" = true
                 ORDER BY "updatedAt" DESC
@@ -368,6 +378,13 @@ def home():
             """)
             rows = cursor.fetchall()
             for row in rows:
+                socials = []
+                if row[11]: socials.append({'network': 'spotify', 'url': row[11]})
+                if row[12]: socials.append({'network': 'instagram', 'url': row[12]})
+                if row[14]: socials.append({'network': 'youtube', 'url': row[14]})
+                if row[15]: socials.append({'network': 'tiktok', 'url': row[15]})
+                if row[13]: socials.append({'network': 'facebook', 'url': row[13]})
+                if row[10]: socials.append({'network': 'website', 'url': row[10]})
                 latest_festivals.append({
                     'id': row[0],
                     'name': row[1],
@@ -378,7 +395,8 @@ def home():
                     'region': row[6],
                     'startDate': row[7],
                     'endDate': row[8],
-                    'genres': row[9] or []
+                    'genres': row[9] or [],
+                    'socials': socials[:3]
                 })
     except Exception as e:
         print(f"Error fetching festivals: {e}")
@@ -497,6 +515,142 @@ def festival_detail(slug):
                            base_url=BASE_URL,
                            get_festival_image_url=get_festival_image_url,
                            get_artist_image_url=get_artist_image_url,
+                           format_date=format_date,
+                           format_location=format_location,
+                           format_genre=format_genre)
+
+
+@app.route('/festivals', methods=['GET'])
+def all_festivals():
+    """All festivals page filtered by month with pagination."""
+    from calendar import monthrange
+
+    now = datetime.now()
+    year = request.args.get('year', now.year, type=int)
+    month = request.args.get('month', now.month, type=int)
+    page = request.args.get('page', 1, type=int)
+    country = request.args.get('country', '').strip()
+    genre = request.args.get('genre', '').strip()
+    per_page = 24
+    offset = (page - 1) * per_page
+
+    # Calculate month bounds
+    first_day = datetime(year, month, 1).date()
+    last_day = datetime(year, month, monthrange(year, month)[1]).date()
+
+    # Calculate prev/next month
+    if month == 1:
+        prev_year, prev_month = year - 1, 12
+    else:
+        prev_year, prev_month = year, month - 1
+
+    if month == 12:
+        next_year, next_month = year + 1, 1
+    else:
+        next_year, next_month = year, month + 1
+
+    festivals = []
+    total_count = 0
+    all_countries = []
+    all_genres = []
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor()
+
+            # Get all countries for filter dropdown
+            cursor.execute("""
+                SELECT DISTINCT country FROM "Festival"
+                WHERE "isActive" = true AND country IS NOT NULL AND country != ''
+                ORDER BY country
+            """)
+            all_countries = [row[0] for row in cursor.fetchall()]
+
+            # Get all genres for filter dropdown
+            cursor.execute("""
+                SELECT DISTINCT unnest(genres) as genre FROM "Festival"
+                WHERE "isActive" = true
+                ORDER BY genre
+            """)
+            all_genres = [row[0] for row in cursor.fetchall()]
+
+            # Build query with filters
+            where_clauses = ['"isActive" = true', '"startDate" >= %s', '"startDate" <= %s']
+            params = [first_day, last_day]
+
+            if country:
+                where_clauses.append('country = %s')
+                params.append(country)
+
+            if genre:
+                where_clauses.append('%s = ANY(genres)')
+                params.append(genre)
+
+            where_sql = ' AND '.join(where_clauses)
+
+            # Get total count
+            cursor.execute(f'SELECT COUNT(*) FROM "Festival" WHERE {where_sql}', params)
+            total_count = cursor.fetchone()[0]
+
+            # Get paginated results
+            cursor.execute(f"""
+                SELECT id, name, slug, "imageUrl", city, country, region, "startDate", "endDate", genres,
+                       website, spotify, instagram, facebook, youtube, tiktok
+                FROM "Festival"
+                WHERE {where_sql}
+                ORDER BY "startDate" ASC
+                LIMIT %s OFFSET %s
+            """, params + [per_page, offset])
+            rows = cursor.fetchall()
+            for row in rows:
+                socials = []
+                if row[11]: socials.append({'network': 'spotify', 'url': row[11]})
+                if row[12]: socials.append({'network': 'instagram', 'url': row[12]})
+                if row[14]: socials.append({'network': 'youtube', 'url': row[14]})
+                if row[15]: socials.append({'network': 'tiktok', 'url': row[15]})
+                if row[13]: socials.append({'network': 'facebook', 'url': row[13]})
+                if row[10]: socials.append({'network': 'website', 'url': row[10]})
+                festivals.append({
+                    'id': row[0],
+                    'name': row[1],
+                    'slug': row[2],
+                    'imageUrl': row[3],
+                    'city': row[4],
+                    'country': row[5],
+                    'region': row[6],
+                    'startDate': row[7],
+                    'endDate': row[8],
+                    'genres': row[9] or [],
+                    'socials': socials[:3]
+                })
+    except Exception as e:
+        print(f"Error fetching festivals: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+    total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
+    month_name = datetime(year, month, 1).strftime('%B %Y')
+
+    return render_template('festivals.html',
+                           festivals=festivals,
+                           month_name=month_name,
+                           year=year,
+                           month=month,
+                           prev_year=prev_year,
+                           prev_month=prev_month,
+                           next_year=next_year,
+                           next_month=next_month,
+                           page=page,
+                           total_pages=total_pages,
+                           total_count=total_count,
+                           country=country,
+                           genre=genre,
+                           all_countries=all_countries,
+                           all_genres=all_genres,
+                           current_year=datetime.now().year,
+                           get_festival_image_url=get_festival_image_url,
                            format_date=format_date,
                            format_location=format_location,
                            format_genre=format_genre)
