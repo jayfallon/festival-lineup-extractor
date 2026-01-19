@@ -708,8 +708,29 @@ def search():
                                     'genres': row[9] or []
                                 }
 
-                            # Preserve search result order
-                            festivals = [festival_dict[fid] for fid in festival_ids if fid in festival_dict]
+                            # Sort: upcoming first by date, then past by date
+                            all_festivals = [festival_dict[fid] for fid in festival_ids if fid in festival_dict]
+                            today = datetime.now().date()
+
+                            upcoming = []
+                            past = []
+                            for f in all_festivals:
+                                start = f['startDate']
+                                if hasattr(start, 'date'):
+                                    start_date = start.date()
+                                else:
+                                    start_date = datetime.fromisoformat(str(start).replace('Z', '+00:00')).date()
+
+                                if start_date >= today:
+                                    upcoming.append(f)
+                                else:
+                                    past.append(f)
+
+                            # Sort upcoming ascending, past descending
+                            upcoming.sort(key=lambda x: x['startDate'])
+                            past.sort(key=lambda x: x['startDate'], reverse=True)
+
+                            festivals = upcoming + past
                         finally:
                             conn.close()
         except Exception as e:
