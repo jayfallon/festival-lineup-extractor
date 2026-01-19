@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 import pg8000
 from urllib.parse import urlparse
 from cuid2 import cuid_wrapper
+import requests
 
 cuid = cuid_wrapper()
 
@@ -658,44 +659,61 @@ def all_festivals():
 
 @app.route('/search', methods=['GET'])
 def search():
-    """Search festivals."""
+    """Search festivals using embedding search API."""
     query = request.args.get('q', '').strip()
     festivals = []
 
-    if query:
-        conn = None
+    if query and len(query) >= 2:
         try:
-            conn = get_db_connection()
-            if conn:
-                cursor = conn.cursor()
-                search_term = f"%{query.lower()}%"
-                cursor.execute("""
-                    SELECT id, name, slug, "imageUrl", city, country, region, "startDate", "endDate", genres
-                    FROM "Festival"
-                    WHERE "isActive" = true
-                      AND (LOWER(name) LIKE %s OR LOWER(city) LIKE %s OR LOWER(country) LIKE %s)
-                    ORDER BY "startDate" DESC
-                    LIMIT 50
-                """, (search_term, search_term, search_term))
-                rows = cursor.fetchall()
-                for row in rows:
-                    festivals.append({
-                        'id': row[0],
-                        'name': row[1],
-                        'slug': row[2],
-                        'imageUrl': row[3],
-                        'city': row[4],
-                        'country': row[5],
-                        'region': row[6],
-                        'startDate': row[7],
-                        'endDate': row[8],
-                        'genres': row[9] or []
-                    })
+            # Call the embedding search API
+            response = requests.get(
+                f"{BASE_URL}/api/search/all",
+                params={'q': query, 'type': 'festival', 'limit': 50},
+                timeout=10
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                festival_ids = [r['entityId'] for r in data.get('results', [])]
+
+                if festival_ids:
+                    # Fetch full festival data for the matched IDs
+                    conn = get_db_connection()
+                    if conn:
+                        try:
+                            cursor = conn.cursor()
+                            # Use ANY to match IDs while preserving search result order
+                            placeholders = ','.join(['%s'] * len(festival_ids))
+                            cursor.execute(f"""
+                                SELECT id, name, slug, "imageUrl", city, country, region, "startDate", "endDate", genres
+                                FROM "Festival"
+                                WHERE id IN ({placeholders})
+                                  AND "isActive" = true
+                            """, tuple(festival_ids))
+                            rows = cursor.fetchall()
+
+                            # Build dict for ordering
+                            festival_dict = {}
+                            for row in rows:
+                                festival_dict[row[0]] = {
+                                    'id': row[0],
+                                    'name': row[1],
+                                    'slug': row[2],
+                                    'imageUrl': row[3],
+                                    'city': row[4],
+                                    'country': row[5],
+                                    'region': row[6],
+                                    'startDate': row[7],
+                                    'endDate': row[8],
+                                    'genres': row[9] or []
+                                }
+
+                            # Preserve search result order
+                            festivals = [festival_dict[fid] for fid in festival_ids if fid in festival_dict]
+                        finally:
+                            conn.close()
         except Exception as e:
             print(f"Error searching festivals: {e}")
-        finally:
-            if conn:
-                conn.close()
 
     return render_template('search.html',
                            festivals=festivals,
