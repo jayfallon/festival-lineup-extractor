@@ -9,9 +9,11 @@
 </div>
 
 {% if festivals %}
+{% if upcoming %}
 <section>
+  <h2 style="color: #fff; margin-bottom: 20px; font-size: 1.25rem;">Upcoming Festivals</h2>
   <div class="grid-4col">
-    {% for festival in festivals %}
+    {% for festival in upcoming %}
     <a href="/festival/{{ festival.slug }}" class="festival-card">
       <div class="card-image-wrapper">
         {% if festival.imageUrl %}
@@ -34,6 +36,38 @@
     {% endfor %}
   </div>
 </section>
+{% endif %}
+
+{% if past %}
+<section style="margin-top: 40px;">
+  <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 30px; margin-bottom: 20px;">
+    <h2 style="color: rgba(255,255,255,0.7); font-size: 1.25rem;">Past Festivals</h2>
+  </div>
+  <div class="grid-4col">
+    {% for festival in past %}
+    <a href="/festival/{{ festival.slug }}" class="festival-card" style="opacity: 0.7;">
+      <div class="card-image-wrapper">
+        {% if festival.imageUrl %}
+        <img src="{{ get_festival_image_url(festival.imageUrl) }}" alt="{{ festival.name }}" loading="lazy" />
+        {% else %}
+        <div class="card-placeholder">{{ festival.name[0] }}</div>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <h3>{{ festival.name }}</h3>
+        <p>{{ format_location(festival.city, festival.country, festival.region) }}</p>
+        {% if festival.startDate %}
+        <p>{{ format_date(festival.startDate) }}{% if festival.endDate and festival.endDate != festival.startDate %} - {{ format_date(festival.endDate) }}{% endif %}</p>
+        {% endif %}
+        {% if festival.genres and festival.genres|length > 0 %}
+        <span class="card-genre">{{ format_genre(festival.genres[0]) }}</span>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 {% else %}
 <div style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.7);">
   <p>No festivals found matching your search.</p>

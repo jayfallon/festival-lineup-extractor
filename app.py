@@ -662,6 +662,8 @@ def search():
     """Search festivals using embedding search API."""
     query = request.args.get('q', '').strip()
     festivals = []
+    upcoming = []
+    past = []
 
     if query and len(query) >= 2:
         try:
@@ -735,9 +737,13 @@ def search():
                             conn.close()
         except Exception as e:
             print(f"Error searching festivals: {e}")
+            upcoming = []
+            past = []
 
     return render_template('search.html',
                            festivals=festivals,
+                           upcoming=upcoming if query else [],
+                           past=past if query else [],
                            query=query,
                            current_year=datetime.now().year,
                            get_festival_image_url=get_festival_image_url,
